@@ -42,7 +42,7 @@ def digest(value: dict) -> str:
             allow_nan=False,
         ).encode()
     except (TypeError, ValueError) as exc:
-        raise ValueError("manifest只能包含JSON兼容值和有限数值") from exc
+        raise ValueError("manifest สามารถมีได้เฉพาะค่าที่เข้ากันได้กับ JSON และตัวเลขจำกัด (finite / 有限)") from exc
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -52,11 +52,11 @@ def _fail(message: str):
 
 def _finite(value: Any) -> None:
     if isinstance(value, float) and not math.isfinite(value):
-        _fail("数值必须是有限值")
+        _fail("ค่าตัวเลขต้องเป็นค่าจำกัด (finite value / 有限)")
     if isinstance(value, Mapping):
         for key, item in value.items():
             if not isinstance(key, str):
-                _fail("对象键必须是字符串")
+                _fail("คีย์ของออบเจกต์ต้องเป็นสตริง (string object key)")
             _finite(item)
     elif isinstance(value, (list, tuple)):
         for item in value:
@@ -88,13 +88,13 @@ def _type(value: Any) -> str:
         "any": "any",
     }
     if not isinstance(value, str) or value.lower() not in aliases:
-        _fail(f"不支持的参数类型: {value!r}")
+        _fail(f"ไม่รองรับชนิดพารามิเตอร์ (unsupported parameter type): {value!r}")
     return aliases[value.lower()]
 
 
 def _node(value: Any) -> str:
     if isinstance(value, bool) or not isinstance(value, (str, int)):
-        _fail("节点ID格式无效")
+        _fail("รูปแบบ ID โหนดไม่ถูกต้อง (invalid node ID format)")
     return str(value)
 
 
@@ -110,18 +110,18 @@ def _binding(name: str, value: Any) -> tuple[str, str]:
             parts = path.split(".")
             if len(parts) == 3 and parts[1] == "inputs":
                 if node is not None and str(node) != parts[0]:
-                    _fail(f"参数 {name} binding node与path冲突")
+                    _fail(f"พารามิเตอร์ {name} มี binding node และ path ขัดแย้งกัน")
                 node, inp = parts[0], parts[2]
             elif len(parts) == 2 and parts[0] == "inputs":
                 inp = parts[1]
             else:
-                _fail(f"参数 {name} binding path格式无效")
+                _fail(f"พารามิเตอร์ {name} มีรูปแบบ binding path ไม่ถูกต้อง")
     elif isinstance(value, (list, tuple)) and len(value) == 2:
         node, inp = value
     else:
-        _fail(f"参数 {name} binding格式无效")
+        _fail(f"พารามิเตอร์ {name} มีรูปแบบ binding ไม่ถูกต้อง")
     if node is None or not isinstance(inp, str) or not inp or "." in inp:
-        _fail(f"参数 {name} binding格式无效")
+        _fail(f"พารามิเตอร์ {name} มีรูปแบบ binding ไม่ถูกต้อง")
     return _node(node), inp
 
 
@@ -140,19 +140,19 @@ def _canonical_parameters(manifest: Mapping) -> tuple[dict, dict]:
         definitions = {}
         for item in raw:
             if not isinstance(item, Mapping):
-                _fail("参数定义格式无效")
+                _fail("รูปแบบนิยามพารามิเตอร์ไม่ถูกต้อง (invalid parameter definition)")
             name = item.get("name", item.get("parameter", item.get("id")))
             if not isinstance(name, str) or not name:
-                _fail("参数定义缺少name")
+                _fail("นิยามพารามิเตอร์ขาดฟิลด์ name")
             if name in definitions:
-                _fail(f"重复参数: {name}")
+                _fail(f"พารามิเตอร์ซ้ำ (duplicate parameter): {name}")
             definitions[name] = {
                 k: copy.deepcopy(v) for k, v in item.items() if k not in {"name", "parameter", "id"}
             }
     else:
-        _fail("manifest.parameters不能为空")
+        _fail("manifest.parameters ต้องไม่เป็นค่าว่าง (cannot be empty)")
     if not definitions:
-        _fail("manifest.parameters不能为空")
+        _fail("manifest.parameters ต้องไม่เป็นค่าว่าง (cannot be empty)")
 
     raw_bindings = normalized.get("bindings", [])
     if isinstance(raw_bindings, Mapping):
@@ -163,13 +163,13 @@ def _canonical_parameters(manifest: Mapping) -> tuple[dict, dict]:
     elif isinstance(raw_bindings, list):
         binding_items = raw_bindings
     else:
-        _fail("manifest.bindings格式无效")
+        _fail("รูปแบบ manifest.bindings ไม่ถูกต้อง")
     for item in binding_items:
         if not isinstance(item, Mapping):
-            _fail("binding定义格式无效")
+            _fail("รูปแบบนิยาม binding ไม่ถูกต้อง")
         name = item.get("parameter", item.get("name", item.get("param")))
         if name not in definitions:
-            _fail(f"binding引用未知参数: {name!r}")
+            _fail(f"binding อ้างอิงพารามิเตอร์ที่ไม่รู้จัก (unknown parameter): {name!r}")
         binding = dict(item)
         binding.pop("parameter", None)
         binding.pop("name", None)
@@ -179,7 +179,7 @@ def _canonical_parameters(manifest: Mapping) -> tuple[dict, dict]:
         old = definitions[name].get("binding")
         if old is not None:
             if _binding(name, old) != _binding(name, binding):
-                _fail(f"参数 {name}存在冲突binding")
+                _fail(f"พารามิเตอร์ {name} มี binding ที่ขัดแย้งกัน")
         else:
             definitions[name]["binding"] = binding
     normalized["parameters"] = definitions
@@ -200,7 +200,7 @@ def _connected(value: Any) -> bool:
 def _object_input(object_info: Mapping, class_type: str, input_name: str):
     info = object_info.get(class_type)
     if not isinstance(info, Mapping):
-        _fail(f"未知节点类型: {class_type}")
+        _fail(f"ไม่ทราบประเภทโหนด (unknown / 未知 node type): {class_type}")
     inputs = info.get("input", {})
     for section in ("required", "optional", "hidden"):
         section_value = inputs.get(section, {}) if isinstance(inputs, Mapping) else {}
@@ -218,7 +218,7 @@ def _object_input(object_info: Mapping, class_type: str, input_name: str):
                 return spec.upper(), {}
             if isinstance(spec, Mapping):
                 return str(spec.get("type", "")).upper(), dict(spec)
-    _fail(f"节点 {class_type} 不存在输入 {input_name}")
+    _fail(f"โหนด {class_type} ไม่มี input {input_name}")
 
 
 def _outputs(info: Mapping) -> list[str]:
@@ -228,7 +228,7 @@ def _outputs(info: Mapping) -> list[str]:
     if isinstance(raw, str):
         raw = [raw]
     if not isinstance(raw, (list, tuple)):
-        _fail("节点output格式无效")
+        _fail("รูปแบบ output ของโหนดไม่ถูกต้อง (invalid node output format)")
     return [str(item).upper() for item in raw]
 
 
@@ -247,29 +247,29 @@ def _check(name: str, spec: Mapping, value: Any) -> Any:
     _finite(value)
     kind = _type(spec.get("type"))
     if kind == "string" and not isinstance(value, str):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     if kind == "integer" and (isinstance(value, bool) or not isinstance(value, int)):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     if kind == "number" and (isinstance(value, bool) or not isinstance(value, (int, float))):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     if kind == "boolean" and not isinstance(value, bool):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     if kind == "array" and not isinstance(value, list):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     if kind == "object" and not isinstance(value, dict):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     if kind in {"image", "video", "asset"} and not isinstance(value, (str, list, tuple, dict)):
-        _fail(f"参数 {name} 类型错误")
+        _fail(f"พารามิเตอร์ {name} ชนิดข้อมูลไม่ถูกต้อง (type error)")
     choices = spec.get("choices", spec.get("enum"))
     if choices is not None and value not in choices:
-        _fail(f"参数 {name} 不在允许选项中")
+        _fail(f"พารามิเตอร์ {name} ไม่อยู่ในตัวเลือกที่อนุญาต")
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         random_seed = name.lower() == "seed" and value == -1 and kind == "integer"
         if not random_seed:
             if spec.get("min") is not None and value < spec["min"]:
-                _fail(f"参数 {name} 超出范围")
+                _fail(f"พารามิเตอร์ {name} อยู่นอกขอบเขต (out of range / 范围)")
             if spec.get("max") is not None and value > spec["max"]:
-                _fail(f"参数 {name} 超出范围")
+                _fail(f"พารามิเตอร์ {name} อยู่นอกขอบเขต (out of range / 范围)")
     return value
 
 
@@ -282,22 +282,22 @@ def _graph_key(graph: Mapping, node: str):
 def _validate_graph(graph: Mapping, object_info: Mapping) -> set[str]:
     node_ids = {str(key) for key in graph}
     if not node_ids:
-        _fail("api_graph不能为空")
+        _fail("api_graph ต้องไม่เป็นค่าว่าง (cannot be empty)")
     for key, node in graph.items():
         if not isinstance(node, Mapping) or not isinstance(node.get("inputs"), Mapping):
-            _fail(f"节点 {key}格式无效")
+            _fail(f"โหนด {key} รูปแบบไม่ถูกต้อง")
         class_type = node.get("class_type")
         if not isinstance(class_type, str) or class_type not in object_info:
-            _fail(f"节点类型未知: {class_type!r}")
+            _fail(f"ประเภทโหนดไม่รู้จัก (unknown node type / 节点类型未知): {class_type!r}")
         compact = class_type.lower().replace("_", "")
         if any(token in compact for token in _DANGEROUS):
-            _fail(f"危险节点类型禁止使用: {class_type}")
+            _fail(f"ห้ามใช้ประเภทโหนดที่เป็นอันตราย: {class_type}")
         info = object_info[class_type]
         if not isinstance(info, Mapping):
-            _fail(f"节点类型object_info格式无效: {class_type}")
+            _fail(f"object_info ของประเภทโหนดมีรูปแบบไม่ถูกต้อง: {class_type}")
         for input_name, value in node["inputs"].items():
             if not isinstance(input_name, str):
-                _fail("节点输入名格式无效")
+                _fail("ชื่อ input ของโหนดมีรูปแบบไม่ถูกต้อง")
             actual, _ = _object_input(object_info, class_type, input_name)
             link_shaped = (
                 isinstance(value, (list, tuple))
@@ -306,31 +306,31 @@ def _validate_graph(graph: Mapping, object_info: Mapping) -> set[str]:
                 and not isinstance(value[0], bool)
             )
             if link_shaped and actual not in {"LIST", "ARRAY"} and not _connected(value):
-                _fail(f"输入 {key}.{input_name} 的connected link格式无效")
+                _fail(f"connected link ของ input {key}.{input_name} มีรูปแบบไม่ถูกต้อง")
             if _connected(value) and actual not in {"LIST", "ARRAY"}:
                 source_key = _graph_key(graph, _node(value[0]))
                 if source_key is None:
-                    _fail(f"输入 {key}.{input_name} 的connected源节点不存在")
+                    _fail(f"โหนดต้นทาง connected (connected source node / 源节点 / unknown) ของ input {key}.{input_name} ไม่มีอยู่")
                 source = graph[source_key]
                 source_info = object_info[source["class_type"]]
                 outputs = _outputs(source_info)
                 slot = value[1]
                 if slot < 0 or slot >= len(outputs):
-                    _fail(f"输入 {key}.{input_name} 的output_slot不存在")
+                    _fail(f"output_slot ของ input {key}.{input_name} ไม่มีอยู่ (output slot not found)")
                 if not _compatible(outputs[slot], actual):
-                    _fail(f"输入 {key}.{input_name} 的连接类型不匹配")
+                    _fail(f"ชนิดการเชื่อมต่อ (connected link type / 输出) ของ input {key}.{input_name} ไม่ตรงกัน")
     return node_ids
 
 
 def validate_manifest(manifest: dict, api_graph: dict, object_info: dict) -> dict:
     if not all(isinstance(value, Mapping) for value in (manifest, api_graph, object_info)):
-        _fail("manifest、api_graph、object_info必须是对象")
+        _fail("manifest, api_graph, object_info ต้องเป็น object (dict)")
     _finite(manifest)
     definitions, normalized = _canonical_parameters(manifest)
     if "version" in normalized and (
         not isinstance(normalized["version"], str) or not _SEMVER.fullmatch(normalized["version"])
     ):
-        _fail("manifest.version必须是semver")
+        _fail("manifest.version ต้องเป็นรูปแบบ semver")
     _validate_graph(api_graph, object_info)
     graph = copy.deepcopy(dict(api_graph))
     output = {}
@@ -350,7 +350,7 @@ def validate_manifest(manifest: dict, api_graph: dict, object_info: dict) -> dic
     }
     for name, raw in definitions.items():
         if not isinstance(name, str) or not isinstance(raw, Mapping):
-            _fail("参数定义格式无效")
+            _fail("รูปแบบนิยามพารามิเตอร์ไม่ถูกต้อง (invalid parameter definition)")
         spec = copy.deepcopy(dict(raw))
         kind = _type(spec.get("type"))
         spec["type"] = kind
@@ -359,20 +359,20 @@ def validate_manifest(manifest: dict, api_graph: dict, object_info: dict) -> dic
             output[name] = spec
             continue
         if "binding" not in spec:
-            _fail(f"参数 {name} 必须有binding")
+            _fail(f"พารามิเตอร์ {name} จำเป็นต้องมี binding")
         node, inp = _binding(name, spec["binding"])
         key = _graph_key(graph, node)
         if key is None:
-            _fail(f"参数 {name} 绑定未知节点 {node}")
+            _fail(f"พารามิเตอร์ {name} ผูกกับโหนดที่ไม่รู้จัก (unknown node / 未知): {node}")
         node_data = graph[key]
         class_type = node_data.get("class_type")
         if inp not in node_data["inputs"]:
-            _fail(f"节点 {node} 不存在图输入 {inp}")
+            _fail(f"โหนด {node} ไม่มี input {inp} ในกราฟ")
         if _connected(node_data["inputs"][inp]):
-            _fail(f"参数 {name} 不能绑定connected input")
+            _fail(f"พารามิเตอร์ {name} ไม่สามารถผูกกับ connected input ได้")
         actual, options = _object_input(object_info, class_type, inp)
         if actual and actual not in compatible[kind] and kind != "any":
-            _fail(f"参数 {name} 类型与真实节点输入不匹配")
+            _fail(f"พารามิเตอร์ {name} มีชนิดข้อมูล (type) ไม่ตรงกับ input ของโหนดจริง")
         if kind == "enum" and options.get("values") and "choices" not in spec:
             spec["choices"] = list(options["values"])
         object_options = options.get("options") if isinstance(options.get("options"), Mapping) else options
@@ -384,16 +384,16 @@ def validate_manifest(manifest: dict, api_graph: dict, object_info: dict) -> dic
                 if name.lower() == "seed" and spec["min"] == -1:
                     spec["min"] = object_min
                 else:
-                    _fail(f"参数 {name} 小于节点允许范围")
+                    _fail(f"พารามิเตอร์ {name} มีค่าน้อยกว่าขอบเขตที่โหนดอนุญาต (range / 范围)")
         if object_max is not None:
             if spec.get("max") is None:
                 spec["max"] = object_max
             elif spec["max"] > object_max:
-                _fail(f"参数 {name} 大于节点允许范围")
+                _fail(f"พารามิเตอร์ {name} มีค่ามากกว่าขอบเขตที่โหนดอนุญาต (range / 范围)")
         if "default" in spec:
             _check(name, spec, spec["default"])
         if spec.get("min") is not None and spec.get("max") is not None and spec["min"] > spec["max"]:
-            _fail(f"参数 {name} 范围无效")
+            _fail(f"พารามิเตอร์ {name} มีขอบเขตไม่ถูกต้อง (invalid range / 范围)")
         spec["binding"] = {"node": node, "input": inp}
         output[name] = spec
     normalized["parameters"] = output
@@ -405,16 +405,16 @@ def _check_variants(name: str, spec: dict, graph: dict, object_info: Mapping) ->
     """A choice that rewrites the graph: each variant sets node inputs (values or links) and drops nodes."""
     variants = spec["variants"]
     if spec["type"] != "enum" or not isinstance(variants, Mapping) or not variants:
-        _fail(f"参数 {name} variants格式无效")
+        _fail(f"พารามิเตอร์ {name} มีรูปแบบ variants ไม่ถูกต้อง")
     spec["choices"] = list(variants)
     if spec.get("default") not in variants:
-        _fail(f"参数 {name} 默认值必须是一个variant")
+        _fail(f"ค่าเริ่มต้นของพารามิเตอร์ {name} ต้องเป็นหนึ่งใน variant")
     for choice in variants:
         applied = copy.deepcopy(graph)
         try:
             _apply_variant(applied, variants[choice])
         except (KeyError, TypeError, AttributeError):
-            _fail(f"参数 {name} 的 {choice} 指向不存在的节点或输入")
+            _fail(f"{choice} ของพารามิเตอร์ {name} ชี้ไปยังโหนดหรือ input ที่ไม่มีอยู่")
         _validate_graph(applied, object_info)
 
 
@@ -441,19 +441,19 @@ def _optional_image(spec: Mapping) -> bool:
 def resolve_parameters(manifest: dict, params: dict, preset: dict | None = None) -> dict:
     definitions = _normalized_definitions(manifest) if isinstance(manifest, Mapping) else None
     if not isinstance(definitions, dict) or not isinstance(params, Mapping):
-        _fail("manifest.parameters和params必须是对象")
+        _fail("manifest.parameters และ params ต้องเป็น object (dict)")
     values_from_preset = preset or {}
     if isinstance(values_from_preset, Mapping) and isinstance(values_from_preset.get("params"), Mapping):
         values_from_preset = values_from_preset["params"]
     if not isinstance(values_from_preset, Mapping):
-        _fail("preset参数格式无效")
+        _fail("รูปแบบพารามิเตอร์พรีเซ็ตไม่ถูกต้อง")
     unknown = (set(params) | set(values_from_preset)) - set(definitions)
     if unknown:
-        _fail(f"未知参数: {sorted(unknown)!r}")
+        _fail(f"พารามิเตอร์ที่ไม่รู้จัก (unknown / 未知 parameters): {sorted(unknown)!r}")
     resolved = {}
     for name, spec in definitions.items():
         if not isinstance(spec, Mapping):
-            _fail(f"参数 {name}定义无效")
+            _fail(f"นิยามของพารามิเตอร์ {name} ไม่ถูกต้อง")
         if "default" in spec:
             resolved[name] = copy.deepcopy(spec["default"])
         if name in values_from_preset:
@@ -464,7 +464,7 @@ def resolve_parameters(manifest: dict, params: dict, preset: dict | None = None)
             resolved.pop(name, None)  # not given: bind_parameters drops its LoadImage node
             continue
         if name not in resolved:
-            _fail(f"缺少参数: {name}")
+            _fail(f"ขาดพารามิเตอร์ (missing parameter): {name}")
         value = resolved[name]
         _check(name, spec, value)
         if name.lower() == "seed" and value == -1:
@@ -473,7 +473,7 @@ def resolve_parameters(manifest: dict, params: dict, preset: dict | None = None)
             if low == -1:
                 low = 0
             if high is None or not isinstance(low, int) or not isinstance(high, int) or high < low:
-                _fail("seed随机范围无效")
+                _fail("ช่วงสุ่มของ seed ไม่ถูกต้อง (invalid seed range)")
             resolved[name] = secrets.randbelow(high - low + 1) + low
     return resolved
 
@@ -485,16 +485,16 @@ def bind_parameters(manifest: dict, api_graph: dict, resolved: dict) -> dict:
         or not isinstance(api_graph, Mapping)
         or not isinstance(resolved, Mapping)
     ):
-        _fail("manifest、api_graph、resolved格式无效")
+        _fail("รูปแบบ manifest, api_graph, resolved ไม่ถูกต้อง")
     unknown = set(resolved) - set(definitions)
     if unknown:
-        _fail(f"未知参数: {sorted(unknown)!r}")
+        _fail(f"พารามิเตอร์ที่ไม่รู้จัก (unknown / 未知 parameters): {sorted(unknown)!r}")
     graph = copy.deepcopy(dict(api_graph))
     for name, spec in definitions.items():
         if name not in resolved or "variants" in spec:
             continue
         if not isinstance(spec, Mapping):
-            _fail(f"参数 {name}定义无效")
+            _fail(f"นิยามของพารามิเตอร์ {name} ไม่ถูกต้อง")
         node, inp = _binding(name, spec.get("binding"))
         key = _graph_key(graph, node)
         if (
@@ -502,11 +502,11 @@ def bind_parameters(manifest: dict, api_graph: dict, resolved: dict) -> dict:
             or not isinstance(graph[key], Mapping)
             or not isinstance(graph[key].get("inputs"), Mapping)
         ):
-            _fail(f"参数 {name}绑定目标不存在")
+            _fail(f"เป้าหมาย binding ของพารามิเตอร์ {name} ไม่มีอยู่")
         if inp not in graph[key]["inputs"]:
-            _fail(f"参数 {name}绑定输入不存在")
+            _fail(f"input ของ binding ของพารามิเตอร์ {name} ไม่มีอยู่")
         if _connected(graph[key]["inputs"].get(inp)):
-            _fail(f"参数 {name}不能绑定connected input")
+            _fail(f"พารามิเตอร์ {name} ไม่สามารถผูกกับ connected input ได้")
         _check(name, spec, resolved[name])
         value = resolved[name]
         if name.lower() == "seed" and value == -1:
@@ -515,7 +515,7 @@ def bind_parameters(manifest: dict, api_graph: dict, resolved: dict) -> dict:
             if low == -1:
                 low = 0
             if not isinstance(low, int) or not isinstance(high, int) or high < low:
-                _fail("seed随机范围无效")
+                _fail("ช่วงสุ่มของ seed ไม่ถูกต้อง (invalid seed range)")
             value = secrets.randbelow(high - low + 1) + low
         graph[key]["inputs"][inp] = copy.deepcopy(value)
     for name, spec in definitions.items():

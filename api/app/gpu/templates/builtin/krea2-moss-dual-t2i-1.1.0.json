@@ -3,7 +3,7 @@
   "model_id": "krea2-moss-dual",
   "model": {
     "model_id": "krea2-moss-dual",
-    "display_name": "Krea-2 Turbo + MOSS-Image 双采样",
+    "display_name": "Krea-2 Turbo + MOSS-Image Dual Sampling",
     "revision": "588feaf955b08b9ac4723eeb751752ab045dba71",
     "source": "https://huggingface.co/Comfy-Org/Krea-2",
     "license": "krea-2-community-license + apache-2.0 (MOSS-Image)",
@@ -22,8 +22,8 @@
     "workflow_key": "krea2-moss-dual-t2i",
     "model_id": "krea2-moss-dual",
     "version": "1.1.0",
-    "title": "Krea-2 Turbo + MOSS 电影胶片双采 (带MJ/胶片精修LoRA)",
-    "description": "在 Krea + MOSS 双采基础上全链路串联 7 个电影胶片与 MJ 质感 LoRA（Krea 忧郁/胶片/写实/柔光/滤镜 + MOSS 梦境/胶片），大幅增强出图质感与光影。",
+    "title": "Krea-2 Turbo + MOSS ฟิล์มภาพยนตร์ Dual Sampling (พร้อม LoRA รีไฟน์ MJ/ฟิล์ม)",
+    "description": "ต่อยอดจาก Krea + MOSS Dual Sampling โดยเชื่อมต่อ LoRA ฟิล์มภาพยนตร์และสไตล์ MJ รวม 7 ตัว ยกระดับมิติและแสงเงาอย่างเห็นได้ชัด",
     "modality": "image",
     "executor": "comfyui",
     "compute_spec": {
@@ -35,8 +35,8 @@
     "parameters": {
       "prompt": {
         "type": "string",
-        "label": "提示词",
-        "description": "两段采样共用同一段提示词。",
+        "label": "พรอมต์ (Prompt)",
+        "description": "การสุ่มตัวอย่างทั้งสองขั้นตอนใช้พรอมต์เดียวกัน",
         "binding": {
           "node": "1",
           "input": "value"
@@ -46,8 +46,8 @@
       },
       "width": {
         "type": "integer",
-        "label": "宽",
-        "description": "必须是 16 的倍数。",
+        "label": "ความกว้าง",
+        "description": "ต้องหารด้วย 16 ลงตัว",
         "binding": {
           "node": "14",
           "input": "width"
@@ -59,8 +59,8 @@
       },
       "height": {
         "type": "integer",
-        "label": "高",
-        "description": "必须是 16 的倍数。",
+        "label": "ความสูง",
+        "description": "ต้องหารด้วย 16 ลงตัว",
         "binding": {
           "node": "14",
           "input": "height"
@@ -72,8 +72,8 @@
       },
       "seed": {
         "type": "integer",
-        "label": "Krea 随机种子",
-        "description": "-1 表示每次随机。",
+        "label": "Seed สุ่มของ Krea",
+        "description": "-1 หมายถึงสุ่มใหม่ทุกครั้ง",
         "binding": {
           "node": "15",
           "input": "seed"
@@ -85,7 +85,7 @@
       },
       "krea_steps": {
         "type": "integer",
-        "label": "Krea 步数",
+        "label": "จำนวนก้าว Krea (Steps)",
         "description": "",
         "binding": {
           "node": "15",
@@ -98,7 +98,7 @@
       },
       "moss_seed": {
         "type": "integer",
-        "label": "MOSS 随机种子",
+        "label": "Seed สุ่มของ MOSS",
         "description": "",
         "binding": {
           "node": "35",
@@ -111,7 +111,7 @@
       },
       "moss_steps": {
         "type": "integer",
-        "label": "MOSS 步数",
+        "label": "จำนวนก้าว MOSS (Steps)",
         "description": "",
         "binding": {
           "node": "35",
@@ -124,7 +124,7 @@
       },
       "moss_cfg": {
         "type": "number",
-        "label": "MOSS 提示词强度",
+        "label": "ความแรงพรอมต์ MOSS (CFG)",
         "description": "",
         "binding": {
           "node": "35",
@@ -138,8 +138,8 @@
       },
       "moss_denoise": {
         "type": "number",
-        "label": "MOSS 重绘幅度",
-        "description": "越大越偏离 Krea 的底图。",
+        "label": "ระยะการรีดรอว์ MOSS (Denoise)",
+        "description": "ยิ่งมาก ยิ่งเปลี่ยนไปจากภาพร่างของ Krea",
         "binding": {
           "node": "35",
           "input": "denoise"
@@ -152,8 +152,8 @@
       },
       "lora_krea_melancholy": {
         "type": "number",
-        "label": "Krea 艺术影调 (Melancholy)",
-        "description": "忧郁艺术影调质感，0 表示关闭",
+        "label": "Krea โทนศิลป์หม่น (Melancholy)",
+        "description": "โทนภาพศิลปะแนวหม่นลึก 0 คือปิด",
         "binding": {
           "node": "101",
           "input": "strength_model"
@@ -163,12 +163,12 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       },
       "lora_krea_tjfilm": {
         "type": "number",
-        "label": "Krea 电影胶片 V2 (TJFilm)",
-        "description": "Krea 专属电影胶片感，0 表示关闭",
+        "label": "Krea ฟิล์มภาพยนตร์ V2 (TJFilm)",
+        "description": "ฟิล์มภาพยนตร์เฉพาะของ Krea 0 คือปิด",
         "binding": {
           "node": "102",
           "input": "strength_model"
@@ -178,12 +178,12 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       },
       "lora_krea_realism": {
         "type": "number",
-        "label": "Krea 写实引擎 (Realism v3.1)",
-        "description": "皮肤与微材质真实感，0 表示关闭",
+        "label": "Krea เครื่องยนต์ความสมจริง (Realism v3.1)",
+        "description": "ความสมจริงของผิวและพื้นผิวละเอียด 0 คือปิด",
         "binding": {
           "node": "103",
           "input": "strength_model"
@@ -193,12 +193,12 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       },
       "lora_krea_softlight": {
         "type": "number",
-        "label": "Krea 影视柔光 (Cc-MJ)",
-        "description": "MJ 风格高光柔和扩散，0 表示关闭",
+        "label": "Krea แสงนุ่มภาพยนตร์ (Cc-MJ)",
+        "description": "แสงไฮไลต์ฟุ้งกระจายสไตล์ MJ 0 คือปิด",
         "binding": {
           "node": "104",
           "input": "strength_model"
@@ -208,12 +208,12 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       },
       "lora_krea_filter": {
         "type": "number",
-        "label": "Krea 风格滤镜 (Cc-MJ)",
-        "description": "MJ 特色调色电影滤镜，0 表示关闭",
+        "label": "Krea ฟิลเตอร์สไตล์ (Cc-MJ)",
+        "description": "ฟิลเตอร์เกรดสีภาพยนตร์อันเป็นเอกลักษณ์ของ MJ 0 คือปิด",
         "binding": {
           "node": "105",
           "input": "strength_model"
@@ -223,12 +223,12 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       },
       "lora_moss_feverdream": {
         "type": "number",
-        "label": "MOSS 梦境胶片 (Feverdream)",
-        "description": "超现实与梦幻光影微调，0 表示关闭",
+        "label": "MOSS ฟิล์มชวนฝัน (Feverdream)",
+        "description": "ปรับแสงเงาแนวเหนือจริงและแฟนตาซี 0 คือปิด",
         "binding": {
           "node": "106",
           "input": "strength_model"
@@ -238,12 +238,12 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       },
       "lora_moss_tjfilm": {
         "type": "number",
-        "label": "MOSS 电影胶片 V1 (TJFilm)",
-        "description": "MOSS 构图阶段电影胶片质感，0 表示关闭",
+        "label": "MOSS ฟิล์มภาพยนตร์ V1 (TJFilm)",
+        "description": "เกรนฟิล์มภาพยนตร์ในขั้นตอนจัดองค์ประกอบของ MOSS 0 คือปิด",
         "binding": {
           "node": "107",
           "input": "strength_model"
@@ -253,7 +253,7 @@
         "max": 2.0,
         "step": 0.05,
         "advanced": true,
-        "group": "LoRA 强度调节"
+        "group": "ปรับความแรง LoRA"
       }
     },
     "dependencies": {

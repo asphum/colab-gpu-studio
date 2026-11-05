@@ -24,14 +24,14 @@ def _bundles() -> tuple[dict, ...]:
     for entry in catalog["workflows"]:
         filename = entry["file"]
         if not isinstance(filename, str) or not re.fullmatch(r"[a-z0-9.-]+\.json", filename):
-            raise ValueError("内置模板文件名不安全")
+            raise ValueError("ชื่อไฟล์เทมเพลตในตัวไม่ปลอดภัย (unsafe builtin template filename)")
         bundle = json.loads((_ROOT / filename).read_text(encoding="utf-8"))
         manifest = validate_manifest(bundle["manifest"], bundle["api_graph"], bundle["object_info"])
         identity = (bundle["workflow_key"], manifest["version"])
         if identity != (entry["workflow_key"], entry["version"]) or identity in identities:
-            raise ValueError("内置模板目录身份不一致或重复")
+            raise ValueError("ข้อมูลระบุตัวตนของเทมเพลตในตัวไม่สอดคล้องกันหรือซ้ำซ้อน")
         if bundle["model_id"] != manifest["model_id"] or bundle["model_id"] != bundle["model"]["model_id"]:
-            raise ValueError("内置模板模型身份不一致")
+            raise ValueError("ข้อมูลระบุตัวตนของโมเดลในเทมเพลตไม่สอดคล้องกัน")
         identities.add(identity)
         bundle["manifest"] = manifest
         result.append(bundle)
@@ -56,7 +56,7 @@ def seed_builtin_templates(registry, owner_id: str) -> None:
             model.update({
                 "enabled": False,
                 "is_mock": False,
-                "disabled_reason": "内置模板尚未在当前安装完成许可审查和真实冒烟，不会自动启用。",
+                "disabled_reason": "เทมเพลตในตัวยังไม่ผ่านการตรวจสอบสัญญาอนุญาตและการทดสอบจริงในการติดตั้งปัจจุบัน จึงไม่เปิดใช้งานอัตโนมัติ",
             })
             registry.repo.create("models", owner_id, model)
             known_models.add(model_id)

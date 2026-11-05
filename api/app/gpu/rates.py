@@ -22,7 +22,7 @@ def minute_rate(spec_key: dict | None) -> float:
 
 
 def mode_param(manifest: dict) -> tuple[str, dict] | None:
-    """The graph-variant choice (e.g. 快速/高质量), if the workflow has one."""
+    """The graph-variant choice (e.g. fast/high-quality), if the workflow has one."""
     params = manifest.get("parameters") or {}
     return next(((k, v) for k, v in params.items() if isinstance(v, dict) and "variants" in v), None)
 

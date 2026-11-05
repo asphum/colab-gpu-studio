@@ -52,9 +52,9 @@ def _ensure_env(root: Path, host: str, port: int, site_url: str | None) -> dict[
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write("\n".join(f"{k}={v}" for k, v in values.items()) + "\n")
         print("=" * 64)
-        print("  首次启动：已自动生成配置文件 .env")
-        print(f"  初始登录密码 (STUDIO_PASSWORD): {password}")
-        print("  （密码保存在当前目录 .env 文件中，可随时查看或修改）")
+        print("  เริ่มต้นใช้งานครั้งแรก: สร้างไฟล์คอนฟิก .env ให้โดยอัตโนมัติเรียบร้อยแล้ว")
+        print(f"  รหัสผ่านเริ่มต้นสำหรับเข้าสู่ระบบ (STUDIO_PASSWORD): {password}")
+        print("  (รหัสผ่านถูกบันทึกไว้ในไฟล์ .env ในโฟลเดอร์ปัจจุบัน สามารถเปิดดูหรือแก้ไขได้ตลอดเวลา)")
         print("=" * 64)
 
     config: dict[str, str] = {}
@@ -68,12 +68,12 @@ def _ensure_env(root: Path, host: str, port: int, site_url: str | None) -> dict[
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Colab GPU Studio 一键启动器")
+    parser = argparse.ArgumentParser(description="ตัวเริ่มใช้งาน Colab GPU Studio ในคำสั่งเดียว")
     parser.add_argument("--host", default=os.getenv("BIND_IP", "127.0.0.1"))
     parser.add_argument("--port", type=int, default=int(os.getenv("BIND_PORT", "8788")))
     parser.add_argument("--site-url", default=None)
-    parser.add_argument("--no-browser", action="store_true", help="启动后不自动打开浏览器")
-    parser.add_argument("--self-test", action="store_true", help="启动自检通过后自动退出（用于打包验收）")
+    parser.add_argument("--no-browser", action="store_true", help="ไม่เปิดเบราว์เซอร์อัตโนมัติหลังจากเริ่มต้น")
+    parser.add_argument("--self-test", action="store_true", help="ออกจากโปรแกรมอัตโนมัติหลังจากการทดสอบตนเองผ่าน (ใช้สำหรับตรวจสอบแพ็กเกจ)")
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[2]
@@ -117,7 +117,7 @@ def main() -> None:
         procs.append(subprocess.Popen(cmd, cwd=root, env=child_env))
 
     url = f"http://127.0.0.1:{args.port}" if args.host in {"0.0.0.0", "127.0.0.1", "localhost"} else f"http://{args.host}:{args.port}"
-    print(f"正在启动 Colab GPU Studio ({url}) ...")
+    print(f"กำลังเริ่มต้น Colab GPU Studio ({url}) ...")
 
     import urllib.request
 
@@ -134,11 +134,11 @@ def main() -> None:
             time.sleep(0.5)
 
     if not ready:
-        print("启动超时，请检查端口是否被占用。", file=sys.stderr)
+        print("หมดเวลาเริ่มต้น กรุณาตรวจสอบว่าพอร์ตถูกใช้งานอยู่หรือไม่", file=sys.stderr)
         _shutdown()
 
-    print(f"Colab GPU Studio 已就绪：{url}")
-    print("按 Ctrl+C 可停止全部服务。")
+    print(f"Colab GPU Studio พร้อมใช้งานแล้ว: {url}")
+    print("กด Ctrl+C เพื่อหยุดการทำงานของทุกเซอร์วิส")
 
     if args.self_test:
         print("SELF_TEST_OK")

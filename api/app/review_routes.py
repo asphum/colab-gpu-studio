@@ -52,7 +52,7 @@ _DANGEROUS = {
 
 def _confirmed(body: dict) -> None:
     if not isinstance(body, dict) or body.get("confirmed") is not True:
-        raise APIError("CONFIRMATION_REQUIRED", "此操作必须明确confirmed=true", 403)
+        raise APIError("CONFIRMATION_REQUIRED", "การดำเนินการนี้ต้องระบุ confirmed=true อย่างชัดเจน", 403)
 
 
 def _admin(user: dict) -> None:
@@ -63,13 +63,13 @@ def _admin(user: dict) -> None:
 
 def _fixed_commit(value, field: str) -> str:
     if not isinstance(value, str) or not _COMMIT.fullmatch(value):
-        raise APIError("REVIEW_INVALID", f"{field}必须是固定的40位commit")
+        raise APIError("REVIEW_INVALID", f"{field}ต้องเป็น commit hash 40 หลักที่แน่นอน")
     return value.lower()
 
 
 def _source(value) -> str:
     if not isinstance(value, str) or len(value) > 2048:
-        raise APIError("MODEL_REVIEW_INVALID", "模型source必须是可信的HTTPS来源")
+        raise APIError("MODEL_REVIEW_INVALID", "source ของโมเดลต้องเป็นแหล่งที่มา HTTPS ที่เชื่อถือได้")
     parsed = urlsplit(value)
     host = (parsed.hostname or "").lower()
     if (
@@ -79,22 +79,22 @@ def _source(value) -> str:
         or parsed.password
         or not parsed.path.strip("/")
     ):
-        raise APIError("MODEL_REVIEW_INVALID", "模型source只允许huggingface.co或github.com的HTTPS地址")
+        raise APIError("MODEL_REVIEW_INVALID", "source ของโมเดลอนุญาตเฉพาะ HTTPS จาก huggingface.co หรือ github.com เท่านั้น")
     return value
 
 
 def _resource_profile(value) -> dict:
     if not isinstance(value, Mapping) or not value:
-        raise APIError("MODEL_REVIEW_INVALID", "resource_profile必须包含资源数字")
+        raise APIError("MODEL_REVIEW_INVALID", "resource_profile ต้องระบุตัวเลขทรัพยากร")
     numeric = 0
 
     def visit(item):
         nonlocal numeric
         if isinstance(item, bool):
-            raise APIError("MODEL_REVIEW_INVALID", "resource_profile数字不合理")
+            raise APIError("MODEL_REVIEW_INVALID", "ตัวเลขใน resource_profile ไม่สมเหตุสมผล")
         if isinstance(item, (int, float)):
             if not math.isfinite(float(item)) or float(item) <= 0 or float(item) > 65536:
-                raise APIError("MODEL_REVIEW_INVALID", "resource_profile数字不合理")
+                raise APIError("MODEL_REVIEW_INVALID", "ตัวเลขใน resource_profile ไม่สมเหตุสมผล")
             numeric += 1
             return
         if isinstance(item, Mapping):
@@ -106,11 +106,11 @@ def _resource_profile(value) -> dict:
                 visit(child)
             return
         if not isinstance(item, str):
-            raise APIError("MODEL_REVIEW_INVALID", "resource_profile格式无效")
+            raise APIError("MODEL_REVIEW_INVALID", "รูปแบบ resource_profile ไม่ถูกต้อง")
 
     visit(value)
     if not numeric:
-        raise APIError("MODEL_REVIEW_INVALID", "resource_profile必须包含资源数字")
+        raise APIError("MODEL_REVIEW_INVALID", "resource_profile ต้องระบุตัวเลขทรัพยากร")
     return copy.deepcopy(dict(value))
 
 
@@ -120,13 +120,13 @@ def _model(repo: Repository, owner: str, model_id: str) -> dict:
         return row
     row = next((item for item in repo.list("models", owner) if item.get("model_id") == model_id), None)
     if not row:
-        raise APIError("MODEL_NOT_FOUND", "工作流绑定的模型不存在", 404)
+        raise APIError("MODEL_NOT_FOUND", "ไม่พบโมเดลที่ผูกกับเวิร์กโฟลว์นี้", 404)
     return row
 
 
 def _reviewed_model(model: dict) -> None:
     if not (model.get("review_approved") is True and model.get("license_accepted") is True):
-        raise APIError("MODEL_NOT_REVIEWED", "模型尚未完成管理员来源与许可审查")
+        raise APIError("MODEL_NOT_REVIEWED", "โมเดลยังไม่ผ่านการตรวจสอบแหล่งที่มาและสัญญาอนุญาตจากผู้ดูแลระบบ")
 
 
 def _review_manifest(row: dict) -> tuple[dict, list[str], str, list[dict]]:
@@ -137,12 +137,12 @@ def _review_manifest(row: dict) -> tuple[dict, list[str], str, list[dict]]:
 
     dependencies = manifest.get("dependencies")
     if not isinstance(dependencies, Mapping):
-        raise APIError("REVIEW_INVALID", "manifest.dependencies缺失")
+        raise APIError("REVIEW_INVALID", "manifest.dependencies ขาดหายไป")
     commit = _fixed_commit(dependencies.get("comfyui_commit"), "dependencies.comfyui_commit")
     try:
         _reviewed_custom_nodes(dependencies.get("custom_nodes"))
     except Exception as exc:
-        raise APIError("REVIEW_INVALID", "custom_nodes 只允许已审核并锁定提交的仓库") from exc
+        raise APIError("REVIEW_INVALID", "custom_nodes อนุญาตเฉพาะคลังที่ผ่านการตรวจสอบและล็อก commit แล้วเท่านั้น") from exc
     weights = dependencies.get("weight_files")
     try:
         checked = _validate_weights({"weight_files": weights})
@@ -151,19 +151,19 @@ def _review_manifest(row: dict) -> tuple[dict, list[str], str, list[dict]]:
     for item in checked:
         target = item.get("target")
         if not isinstance(target, str) or not target or "\\" in target:
-            raise APIError("REVIEW_INVALID", "weight target路径不安全")
+            raise APIError("REVIEW_INVALID", "เส้นทาง weight target ไม่ปลอดภัย")
 
     classes = set()
     for node in row.get("api_graph", {}).values():
         if not isinstance(node, Mapping) or not isinstance(node.get("class_type"), str):
-            raise APIError("WORKFLOW_INVALID", "api_graph节点类型无效")
+            raise APIError("WORKFLOW_INVALID", "ประเภทโหนดใน api_graph ไม่ถูกต้อง")
         class_type = node["class_type"]
         compact = class_type.lower().replace("_", "")
         if any(token in compact for token in _DANGEROUS):
-            raise APIError("REVIEW_INVALID", f"危险节点类型禁止使用: {class_type}")
+            raise APIError("REVIEW_INVALID", f"ห้ามใช้ประเภทโหนดที่เป็นอันตราย: {class_type}")
         classes.add(class_type)
     if not classes:
-        raise APIError("WORKFLOW_INVALID", "api_graph不能为空")
+        raise APIError("WORKFLOW_INVALID", "api_graph ต้องไม่เป็นค่าว่าง")
     return manifest, sorted(classes), commit, checked
 
 
@@ -200,7 +200,7 @@ def _workflow_digest(row: dict) -> str:
             {"manifest": row["manifest"], "api_graph": row["api_graph"], "object_info": row["object_info"]}
         )
     except (KeyError, TypeError, ValueError) as exc:
-        raise APIError("WORKFLOW_INVALID", "工作流artifact不完整，无法计算固定摘要") from exc
+        raise APIError("WORKFLOW_INVALID", "artifact ของเวิร์กโฟลว์ไม่สมบูรณ์ ไม่สามารถคำนวณ digest ได้") from exc
 
 
 def _job_request(workflow_id: str, row: dict, body: Mapping) -> dict:
@@ -226,7 +226,7 @@ def _job_request(workflow_id: str, row: dict, body: Mapping) -> dict:
 def _idempotency_key(request: Request) -> str:
     key = request.headers.get("Idempotency-Key")
     if not key or len(key) > 200:
-        raise APIError("IDEMPOTENCY_REQUIRED", "真实冒烟必须提供固定Idempotency-Key")
+        raise APIError("IDEMPOTENCY_REQUIRED", "การทดสอบความพร้อมจริงต้องระบุ Idempotency-Key ที่แน่นอน")
     return key
 
 
@@ -239,7 +239,7 @@ def _spec_key(value):
 
 def _eligible_spec(specs, requested_key):
     if not isinstance(specs, list):
-        raise APIError("GPU_UNAVAILABLE", "Colab规格响应无效")
+        raise APIError("GPU_UNAVAILABLE", "การตอบกลับสเปกของ Colab ไม่ถูกต้อง")
     for spec in specs:
         if not isinstance(spec, Mapping) or spec.get("eligible") is not True:
             continue
@@ -248,17 +248,17 @@ def _eligible_spec(specs, requested_key):
             continue
         if dict(key) == dict(requested_key):
             return copy.deepcopy(dict(spec))
-    raise APIError("GPU_UNAVAILABLE", "请求的GPU规格不是当前账户实际可用规格")
+    raise APIError("GPU_UNAVAILABLE", "สเปก GPU ที่ร้องขอไม่พร้อมใช้งานจริงในบัญชีปัจจุบัน")
 
 
 def _budget_check(st, owner: str, cfg: GpuConfig, units: float) -> None:
     if not math.isfinite(units) or units <= 0:
-        raise APIError("RATE_UNKNOWN", "真实GPU费率或预算无效")
+        raise APIError("RATE_UNKNOWN", "อัตราค่าบริการหรือฟิลด์งบประมาณของ GPU จริงไม่ถูกต้อง")
     if units > cfg.max_job_units:
-        raise APIError("GPU_BUDGET_EXCEEDED", "真实冒烟预算超过单任务上限")
+        raise APIError("GPU_BUDGET_EXCEEDED", "งบประมาณการทดสอบจริงเกินขีดจำกัดต่อหนึ่งงาน")
     daily, monthly = Scheduler(st, config=cfg)._usage_totals(owner)
     if daily + units > cfg.daily_units or monthly + units > cfg.monthly_units:
-        raise APIError("GPU_BUDGET_EXCEEDED", "真实冒烟预算超过账户日/月上限")
+        raise APIError("GPU_BUDGET_EXCEEDED", "งบประมาณการทดสอบจริงเกินขีดจำกัดรายวัน/รายเดือนของบัญชี")
 
 
 @router.post("/models/{model_id}/review")
@@ -268,14 +268,14 @@ def review_model(
     _admin(user)
     _confirmed(body)
     if body.get("license_accepted") is not True:
-        raise APIError("LICENSE_CONFIRMATION_REQUIRED", "必须明确接受模型许可", 403)
+        raise APIError("LICENSE_CONFIRMATION_REQUIRED", "ต้องยอมรับสัญญาอนุญาตของโมเดลอย่างชัดเจน", 403)
     repo = Repository(st)
     model = _model(repo, user["id"], model_id)
     _source(model.get("source"))
     _fixed_commit(model.get("revision"), "revision")
     license_name = model.get("license")
     if not isinstance(license_name, str) or not license_name.strip():
-        raise APIError("MODEL_REVIEW_INVALID", "模型license不能为空")
+        raise APIError("MODEL_REVIEW_INVALID", "สัญญาอนุญาต (license) ของโมเดลต้องไม่เป็นค่าว่าง")
     _resource_profile(model.get("resource_profile"))
     reviewed = repo.update(
         "models",
@@ -289,7 +289,7 @@ def review_model(
             # Review is not enablement.  Only accept-smoke may flip this bit.
             "enabled": False,
             "is_mock": False,
-            "disabled_reason": "已通过人工审查，等待已授权真实GPU冒烟验收",
+            "disabled_reason": "ผ่านการตรวจสอบโดยผู้ดูแลแล้ว รอการตรวจรับการทดสอบบน GPU จริงที่ได้รับอนุญาต",
         },
         user["id"],
     )
@@ -305,7 +305,7 @@ def review_workflow(
     repo = Repository(st)
     row = own(repo, "workflows", workflow_id, user)
     if row.get("state") not in {"draft", "validated"}:
-        raise APIError("WORKFLOW_REVIEW_INVALID", "只能审查draft或validated工作流")
+        raise APIError("WORKFLOW_REVIEW_INVALID", "สามารถตรวจสอบได้เฉพาะเวิร์กโฟลว์ที่อยู่ในสถานะ draft หรือ validated เท่านั้น")
     model = _model(repo, user["id"], row.get("model_id"))
     _reviewed_model(model)
     manifest, allowlist, commit, weights = _review_manifest(row)
@@ -351,27 +351,27 @@ def real_smoke(
         or not isinstance(body.get("project_id"), str)
         or not isinstance(body.get("params", {}), dict)
     ):
-        raise APIError("VALIDATION_ERROR", "project_id和params格式无效")
+        raise APIError("VALIDATION_ERROR", "รูปแบบ project_id และ params ไม่ถูกต้อง")
     asset_ids = body.get("asset_ids", [])
     if (
         not isinstance(asset_ids, list)
         or len(asset_ids) > 10
         or any(not isinstance(value, str) for value in asset_ids)
     ):
-        raise APIError("VALIDATION_ERROR", "asset_ids格式无效")
+        raise APIError("VALIDATION_ERROR", "รูปแบบ asset_ids ไม่ถูกต้อง")
     requested_key = _spec_key(body.get("spec"))
     if requested_key is None:
-        raise APIError("GPU_SPEC_REQUIRED", "必须提供来自当前账户的spec.key")
+        raise APIError("GPU_SPEC_REQUIRED", "ต้องระบุ spec.key จากบัญชีปัจจุบัน")
     key = _idempotency_key(request)
     repo = Repository(st)
     row = own(repo, "workflows", workflow_id, user)
     if row.get("state") not in {"draft", "validated"}:
-        raise APIError("WORKFLOW_REVIEW_INVALID", "真实冒烟只能用于未发布的draft或validated工作流")
+        raise APIError("WORKFLOW_REVIEW_INVALID", "การทดสอบความพร้อมจริงใช้ได้เฉพาะกับเวิร์กโฟลว์ draft หรือ validated ที่ยังไม่เผยแพร่เท่านั้น")
     model = _model(repo, user["id"], row.get("model_id"))
     _reviewed_model(model)
     snapshot_parts = _reviewed_snapshot(row) if row.get("review_approved") is True else None
     if snapshot_parts is None:
-        raise APIError("WORKFLOW_NOT_REVIEWED", "工作流尚未完成管理员审查")
+        raise APIError("WORKFLOW_NOT_REVIEWED", "เวิร์กโฟลว์ยังไม่ผ่านการตรวจสอบจากผู้ดูแลระบบ")
     try:
         params = resolve_parameters(row["manifest"], body.get("params", {}))
     except (TypeError, ValueError) as exc:
@@ -387,7 +387,7 @@ def real_smoke(
     for asset_id in asset_ids:
         asset = own(st, "assets", asset_id, user)
         if asset.get("project_id") != project["id"]:
-            raise APIError("ASSET_PROJECT_MISMATCH", "参考素材不属于当前项目")
+            raise APIError("ASSET_PROJECT_MISMATCH", "ไฟล์อ้างอิงไม่ได้เป็นของโปรเจกต์ปัจจุบัน")
 
     raw = {
         "project_id": project["id"],
@@ -410,7 +410,7 @@ def real_smoke(
     )
     if previous:
         if previous.get("body_hash") != digest(raw):
-            raise APIError("IDEMPOTENCY_CONFLICT", "相同幂等键不能用于不同冒烟参数", 409)
+            raise APIError("IDEMPOTENCY_CONFLICT", "Idempotency Key เดียวกันไม่สามารถใช้กับพารามิเตอร์ทดสอบที่แตกต่างกันได้", 409)
         return ok(
             {
                 "id": previous["id"],
@@ -424,17 +424,17 @@ def real_smoke(
 
     cfg = GpuConfig.from_env()
     if not cfg.real_enabled:
-        raise APIError("REAL_GPU_DISABLED", "GPU_REAL_ENABLED尚未启用")
+        raise APIError("REAL_GPU_DISABLED", "GPU_REAL_ENABLED ยังไม่ได้เปิดใช้งาน")
     if cfg.unit_rate is None or cfg.unit_rate <= 0:
-        raise APIError("RATE_UNKNOWN", "必须先配置真实GPU每分钟估算费率")
+        raise APIError("RATE_UNKNOWN", "ต้องกำหนดอัตราค่าบริการประเมินต่อนาทีของ GPU จริงก่อน")
     google = GoogleService(repo, user["id"])
     if not google.status().get("colab", {}).get("connected"):
-        raise APIError("GOOGLE_NOT_CONNECTED", "请先完成个人Colab OAuth授权")
+        raise APIError("GOOGLE_NOT_CONNECTED", "กรุณายืนยันสิทธิ์ Colab OAuth ส่วนตัวก่อน")
     chosen_spec = _eligible_spec(GoogleColabProvider(repo, user["id"]).list_specs(), requested_key)
-    # 大模型要先下载权重，五分钟不够；由 manifest.max_runtime_minutes 声明，仍受全局上限约束。
+    # โมเดลใหญ่ต้องดาวน์โหลดน้ำหนักก่อน 5 นาทีอาจไม่พอ ให้กำหนดผ่าน manifest.max_runtime_minutes โดยยังอยู่ภายใต้ขีดจำกัดส่วนกลาง
     declared = row["manifest"].get("max_runtime_minutes", 5)
     if isinstance(declared, bool) or not isinstance(declared, int) or declared < 1:
-        raise APIError("WORKFLOW_INVALID", "manifest.max_runtime_minutes必须是正整数")
+        raise APIError("WORKFLOW_INVALID", "manifest.max_runtime_minutes ต้องเป็นจำนวนเต็มบวก")
     runtime = min(declared, cfg.max_runtime_minutes)
     estimated = runtime * cfg.unit_rate  # budget worst case
     picked = mode_param(row["manifest"])
@@ -469,11 +469,11 @@ def real_smoke(
         if not isinstance(loras, list) or len(loras) > 3 or any(
             not isinstance(p, dict) or p.get("id") not in curated_ids for p in loras
         ):
-            raise APIError("VALIDATION_ERROR", "冒烟只允许使用精选 LoRA")
+            raise APIError("VALIDATION_ERROR", "การทดสอบความพร้อมอนุญาตให้ใช้เฉพาะ LoRA ที่คัดสรรไว้เท่านั้น")
         _apply_loras(repo, user, row, loras, snapshot, "colab")
     with st.dispatch_lock() as acquired:
         if not acquired:
-            raise APIError("SCHEDULER_BUSY", "调度正在同步，请稍后用相同幂等键重试", 503, True)
+            raise APIError("SCHEDULER_BUSY", "ระบบจัดคิวกำลังซิงค์ข้อมูล กรุณาลองใหม่ในภายหลังด้วย Idempotency Key เดิม", 503, True)
         _budget_check(st, user["id"], cfg, estimated)
         job, created = repo.create_job(user["id"], raw, key)
         if created:
@@ -505,7 +505,7 @@ def real_smoke(
                 job["id"],
                 user["id"],
                 "queued",
-                "已通过人工审查并排队真实模型冒烟；最长以 manifest 声明的分钟数为限，完成后立即释放GPU",
+                "ผ่านการตรวจสอบโดยผู้ดูแลแล้วและเข้าคิวทดสอบบนโมเดลจริง โดยจำกัดเวลาสูงสุดตามที่ระบุใน manifest และจะปล่อยคืน GPU ทันทีเมื่อเสร็จสิ้น",
             )
     return ok(
         {
@@ -529,15 +529,15 @@ def prepare_workflow(
     repo = Repository(st)
     row = own(repo, "workflows", workflow_id, user)
     if row.get("review_approved") is not True:
-        raise APIError("WORKFLOW_NOT_REVIEWED", "工作流尚未完成管理员审查")
+        raise APIError("WORKFLOW_NOT_REVIEWED", "เวิร์กโฟลว์ยังไม่ผ่านการตรวจสอบจากผู้ดูแลระบบ")
     cfg = GpuConfig.from_env()
     if not cfg.real_enabled:
-        raise APIError("REAL_GPU_DISABLED", "GPU_REAL_ENABLED尚未启用")
+        raise APIError("REAL_GPU_DISABLED", "GPU_REAL_ENABLED ยังไม่ได้เปิดใช้งาน")
     if not GoogleService(repo, user["id"]).status().get("colab", {}).get("connected"):
-        raise APIError("GOOGLE_NOT_CONNECTED", "请先完成个人Colab OAuth授权")
+        raise APIError("GOOGLE_NOT_CONNECTED", "กรุณายืนยันสิทธิ์ Colab OAuth ส่วนตัวก่อน")
     project_id = body.get("project_id")
     if not isinstance(project_id, str):
-        raise APIError("VALIDATION_ERROR", "project_id必填")
+        raise APIError("VALIDATION_ERROR", "จำเป็นต้องระบุ project_id")
     own(st, "projects", project_id, user)
     meta = {
         "workflow_sha256": row.get("sha256"),
@@ -548,7 +548,7 @@ def prepare_workflow(
     key = prep_idempotency_key(row.get("sha256") or workflow_id, _idempotency_key(request))
     with st.dispatch_lock() as acquired:
         if not acquired:
-            raise APIError("SCHEDULER_BUSY", "调度正在同步，请稍后用相同幂等键重试", 503, True)
+            raise APIError("SCHEDULER_BUSY", "ระบบจัดคิวกำลังซิงค์ข้อมูล กรุณาลองใหม่ในภายหลังด้วย Idempotency Key เดิม", 503, True)
         job = create_prep_job(repo, user["id"], project_id, _reviewed_snapshot(row), meta, key)
     return ok({"id": job["id"], "job_id": job["id"], "state": job["state"]}, request, 202)
 
@@ -564,10 +564,10 @@ def prepare_loras(body: dict, request: Request, user=Depends(current_user), st=D
     rows = [w for w in repo.list("workflows", user["id"]) if w.get("workflow_key") in lora_registry.H3_WORKFLOWS
             and w.get("state") == "published" and w.get("review_approved") is True]
     if not rows:
-        raise APIError("WORKFLOW_NOT_REVIEWED", "没有已发布的 H3 工作流")
+        raise APIError("WORKFLOW_NOT_REVIEWED", "ไม่มีเวิร์กโฟลว์ H3 ที่เผยแพร่แล้ว")
     project_id = body.get("project_id")
     if not isinstance(project_id, str):
-        raise APIError("VALIDATION_ERROR", "project_id必填")
+        raise APIError("VALIDATION_ERROR", "จำเป็นต้องระบุ project_id")
     own(st, "projects", project_id, user)
     row = rows[0]
     snapshot = _reviewed_snapshot(row)
@@ -579,7 +579,7 @@ def prepare_loras(body: dict, request: Request, user=Depends(current_user), st=D
     key = prep_idempotency_key("curated-loras", _idempotency_key(request))
     with st.dispatch_lock() as acquired:
         if not acquired:
-            raise APIError("SCHEDULER_BUSY", "调度正在同步，请稍后用相同幂等键重试", 503, True)
+            raise APIError("SCHEDULER_BUSY", "ระบบจัดคิวกำลังซิงค์ข้อมูล กรุณาลองใหม่ในภายหลังด้วย Idempotency Key เดิม", 503, True)
         job = create_prep_job(repo, user["id"], project_id, snapshot, meta, key)
     return ok({"id": job["id"], "job_id": job["id"], "state": job["state"]}, request, 202)
 
@@ -614,15 +614,15 @@ def accept_smoke(
         or set(body) - {"job_id", "confirmed"}
         or not isinstance(body.get("job_id"), str)
     ):
-        raise APIError("INVALID_SMOKE_EVIDENCE", "只能提交服务器生成的job_id，不能提交客户端测试证据")
+        raise APIError("INVALID_SMOKE_EVIDENCE", "ส่งได้เฉพาะ job_id ที่เซิร์ฟเวอร์สร้างขึ้นเท่านั้น ไม่สามารถส่งหลักฐานทดสอบจากฝั่งไคลเอนต์ได้")
     repo = Repository(st)
     row = own(repo, "workflows", workflow_id, user)
     if row.get("state") not in {"draft", "validated"}:
-        raise APIError("WORKFLOW_ALREADY_PUBLISHED", "已发布版本不能覆写冒烟验收")
+        raise APIError("WORKFLOW_ALREADY_PUBLISHED", "เวอร์ชันที่เผยแพร่แล้วไม่สามารถเขียนทับผลการตรวจรับการทดสอบได้")
     model = _model(repo, user["id"], row.get("model_id"))
     _reviewed_model(model)
     if row.get("review_approved") is not True:
-        raise APIError("WORKFLOW_NOT_REVIEWED", "工作流尚未完成管理员审查")
+        raise APIError("WORKFLOW_NOT_REVIEWED", "เวิร์กโฟลว์ยังไม่ผ่านการตรวจสอบจากผู้ดูแลระบบ")
     job = own(repo, "jobs", body["job_id"], user)
     snapshot = job.get("snapshot") or {}
     if (
@@ -630,27 +630,27 @@ def accept_smoke(
         or job.get("provider") != "colab"
         or snapshot.get("workflow_smoke") is not True
     ):
-        raise APIError("SMOKE_NOT_COMPLETE", "只能验收已完成的服务器真实工作流冒烟任务")
+        raise APIError("SMOKE_NOT_COMPLETE", "สามารถตรวจรับได้เฉพาะงานทดสอบเวิร์กโฟลว์จริงบนเซิร์ฟเวอร์ที่เสร็จสมบูรณ์แล้วเท่านั้น")
     if job.get("target_workflow_id") != workflow_id or job.get("target_model_id") != row.get("model_id"):
-        raise APIError("SMOKE_TARGET_MISMATCH", "冒烟任务目标与当前工作流/模型不匹配")
+        raise APIError("SMOKE_TARGET_MISMATCH", "เป้าหมายของงานทดสอบไม่ตรงกับเวิร์กโฟลว์/โมเดลปัจจุบัน")
     output_ids = job.get("output_asset_ids")
     if not isinstance(output_ids, list) or not output_ids:
-        raise APIError("SMOKE_OUTPUT_INVALID", "真实冒烟没有可验收输出")
+        raise APIError("SMOKE_OUTPUT_INVALID", "การทดสอบความพร้อมจริงไม่มีผลลัพธ์ที่สามารถตรวจรับได้")
     for asset_id in output_ids:
         asset = own(st, "assets", asset_id, user)
         try:
             content = read_asset(asset)
         except (OSError, ValueError) as exc:
-            raise APIError("SMOKE_OUTPUT_INVALID", "冒烟输出文件不可读取") from exc
+            raise APIError("SMOKE_OUTPUT_INVALID", "ไม่สามารถอ่านไฟล์ผลลัพธ์ของการทดสอบได้") from exc
         if asset.get("size") != len(content) or asset.get("sha256") != hashlib.sha256(content).hexdigest():
-            raise APIError("SMOKE_OUTPUT_INVALID", "冒烟输出SHA校验失败")
+            raise APIError("SMOKE_OUTPUT_INVALID", "การตรวจสอบ SHA ของผลลัพธ์การทดสอบล้มเหลว")
     leases = [lease for lease in repo.list("leases", user["id"]) if lease.get("owner_job_id") == job["id"]]
     if not leases or any(lease.get("state") != "deleted" for lease in leases):
-        raise APIError("GPU_NOT_RELEASED", "GPU租约尚未由服务器确认释放")
+        raise APIError("GPU_NOT_RELEASED", "สัญญาเช่า GPU ยังไม่ได้รับการยืนยันการปล่อยคืนจากเซิร์ฟเวอร์")
     diagnostics = _job_gpu_diagnostics(job, leases)
     requested = job.get("requested_spec")
     if not isinstance(requested, Mapping) or diagnostics is None:
-        raise APIError("GPU_EVIDENCE_MISSING", "缺少服务器保存的实际GPU诊断证据")
+        raise APIError("GPU_EVIDENCE_MISSING", "ขาดหลักฐานการวินิจฉัย GPU จริงที่บันทึกโดยเซิร์ฟเวอร์")
     tested = {"requested_spec": copy.deepcopy(dict(requested)), "actual_gpu": diagnostics}
     updated_workflow = repo.update(
         "workflows",

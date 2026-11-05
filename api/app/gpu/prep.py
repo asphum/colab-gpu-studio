@@ -91,7 +91,7 @@ def create_prep_job(
             },
             owner_id,
         )
-        repo.event(job["id"], owner_id, "queued", "为任务自动准备缓存（CPU 运行时，不出图，不占 GPU）" if for_job_id else "缓存准备任务已创建（CPU 运行时，不占 GPU）")
+        repo.event(job["id"], owner_id, "queued", "เตรียมแคชสำหรับงานโดยอัตโนมัติ (CPU runtime ไม่สร้างภาพ ไม่กิน GPU)" if for_job_id else "สร้างงานเตรียมแคชแล้ว (CPU runtime ไม่กิน GPU)")
     return job
 
 

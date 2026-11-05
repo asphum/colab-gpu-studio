@@ -39,17 +39,17 @@ def current_user(request: Request):
         raw = request.cookies.get("studio_session", "")
     payload = read_session(raw)
     if not payload or not payload.get("uid"):
-        raise APIError("UNAUTHENTICATED", "请先登录独立 GPU 工作台", 401)
+        raise APIError("UNAUTHENTICATED", "กรุณาเข้าสู่ระบบสตูดิโอ GPU ส่วนตัวก่อน", 401)
     return {"id": payload["uid"], "role": payload.get("role", "user")}
 
 
 def own(st, kind, record_id, user):
     value = st.get(kind, record_id, user["id"])
     if not value:
-        raise APIError("NOT_FOUND", "资源不存在或不属于当前用户", 404)
+        raise APIError("NOT_FOUND", "ไม่พบทรัพยากร หรือทรัพยากรนี้ไม่ได้เป็นของผู้ใช้ปัจจุบัน", 404)
     return value
 
 
 def admin(user):
     if user.get("role") != "admin":
-        raise APIError("FORBIDDEN", "此操作需要管理员确认", 403)
+        raise APIError("FORBIDDEN", "การดำเนินการนี้ต้องได้รับการยืนยันจากผู้ดูแลระบบ", 403)

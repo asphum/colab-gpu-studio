@@ -3,27 +3,22 @@
   "model_id": "minimax-h3",
   "model": {
     "model_id": "minimax-h3",
-    "display_name": "MiniMax H3 图生视频（带声音）",
+    "display_name": "MiniMax H3 ภาพเป็นวิดีโอ (พร้อมเสียง)",
     "revision": "54472221d27c695fca9621b0c3ed52f06c4af707",
     "source": "https://huggingface.co/Comfy-Org/MiniMax-H3",
     "license": "minimax-h3-community-license-agreement",
     "modality": "video",
-    "resource_profile": {
-      "disk_gb": 44,
-      "weights_gb": 40.1,
-      "min_vram_gb": 24,
-      "min_ram_gb": 40
-    },
+    "resource_profile": "H3 FL2VA int8_convrot + qwen3vl-32b nvfp4 ตัวเข้ารหัส + Lightning 8 ก้าว LoRA (L4)",
     "variants": [
-      "H3 FL2VA int8_convrot + qwen3vl-32b nvfp4 编码器 + Lightning 8 步 LoRA（L4）"
+      "H3 FL2VA int8_convrot + qwen3vl-32b nvfp4 ตัวเข้ารหัส + Lightning 8 ก้าว LoRA (L4)"
     ]
   },
   "manifest": {
     "workflow_key": "minimax-h3-ref2v",
     "model_id": "minimax-h3",
     "version": "1.4.0",
-    "title": "MiniMax H3 多参考图生视频（带声音）",
-    "description": "最多 6 张参考图（人物、风格、场景）锁定画面，生成带原生音频的短视频。网页可选 4步/8步 v1.1 Turbo、快速/精修/高质量、二次元无缝/官方原版 VAE，并可叠加 2D 动漫锁定与动态壁纸 LoRA；在 Colab L4 上运行。",
+    "title": "MiniMax H3 วิดีโอจากภาพอ้างอิงหลายภาพ (พร้อมเสียง)",
+    "description": "ใช้ภาพอ้างอิงสูงสุด 6 ภาพ (บุคคล, สไตล์, ฉาก) เพื่อล็อกภาพและสร้างวิดีโอสั้นพร้อมเสียงต้นฉบับ รันบน Colab L4",
     "modality": "video",
     "executor": "comfyui",
     "compute_spec": {
@@ -35,7 +30,7 @@
     "parameters": {
       "ref_1": {
         "type": "image",
-        "label": "参考图 1",
+        "label": "ภาพอ้างอิง 1",
         "description": "",
         "binding": {
           "node": "1",
@@ -47,7 +42,7 @@
       },
       "ref_2": {
         "type": "image",
-        "label": "参考图 2",
+        "label": "ภาพอ้างอิง 2",
         "description": "",
         "binding": {
           "node": "2",
@@ -59,7 +54,7 @@
       },
       "ref_3": {
         "type": "image",
-        "label": "参考图 3",
+        "label": "ภาพอ้างอิง 3",
         "description": "",
         "binding": {
           "node": "3",
@@ -71,7 +66,7 @@
       },
       "ref_4": {
         "type": "image",
-        "label": "参考图 4",
+        "label": "ภาพอ้างอิง 4",
         "description": "",
         "binding": {
           "node": "4",
@@ -83,7 +78,7 @@
       },
       "ref_5": {
         "type": "image",
-        "label": "参考图 5",
+        "label": "ภาพอ้างอิง 5",
         "description": "",
         "binding": {
           "node": "5",
@@ -95,7 +90,7 @@
       },
       "ref_6": {
         "type": "image",
-        "label": "参考图 6",
+        "label": "ภาพอ้างอิง 6",
         "description": "",
         "binding": {
           "node": "6",
@@ -107,29 +102,29 @@
       },
       "mode": {
         "type": "enum",
-        "label": "模式",
-        "description": "8 步 v1.1（Shift 6/3）保五官与 CG 细节更稳；精修会放大 1.2× 再二采 8 步。",
+        "label": "โหมด",
+        "description": "8 ก้าว v1.1 (Shift 6/3) เก็บหน้าตาและรายละเอียด CG นิ่งกว่า; โหมดรีไฟน์จะขยาย 1.2x แล้วสุ่มตัวอย่างรอบสองอีก 8 ก้าว",
         "default": "fast8",
         "options": [
           {
             "value": "fast",
-            "label": "快速 4步"
+            "label": "แบบเร็ว 4 ก้าว"
           },
           {
             "value": "fast8",
-            "label": "快速 8步 v1.1"
+            "label": "แบบเร็ว 8 ก้าว v1.1"
           },
           {
             "value": "refine",
-            "label": "4步+精修"
+            "label": "4 ก้าว + รีไฟน์"
           },
           {
             "value": "refine8",
-            "label": "8步 v1.1+精修"
+            "label": "8 ก้าว v1.1 + รีไฟน์"
           },
           {
             "value": "hq",
-            "label": "高质量 20步"
+            "label": "คุณภาพสูง 20 ก้าว"
           }
         ],
         "typical_minutes": {
@@ -249,8 +244,8 @@
       },
       "video_vae": {
         "type": "enum",
-        "label": "视频 VAE（画风解码）",
-        "description": "二次元无缝 VAE 专为 2D/CG 插画微调，改善皮肤潮红、边缘发糊与网格伪影；也可以切回官方原版 VAE。",
+        "label": "วิดีโอ VAE (ถอดรหัสภาพ)",
+        "description": "อนิเมะ Seamless VAE ปรับแต่งพิเศษสำหรับภาพวาด 2D/CG หรือจะสลับกลับไปใช้ VAE ทางการก็ได้",
         "binding": {
           "node": "13",
           "input": "vae_name"
@@ -259,11 +254,11 @@
         "options": [
           {
             "value": "minimax_h3_video_vae_dully_seamless_v1_int8convrot.safetensors",
-            "label": "二次元/CG 无缝 VAE（推荐）"
+            "label": "อนิเมะ/CG Seamless VAE (แนะนำ)"
           },
           {
             "value": "minimax_h3_video_vae_int8_convrot.safetensors",
-            "label": "官方原版 VAE"
+            "label": "VAE ทางการดั้งเดิม"
           }
         ],
         "choices": [
@@ -273,8 +268,8 @@
       },
       "prompt": {
         "type": "string",
-        "label": "提示词",
-        "description": "用 <Picture 1>、<Picture 2>… 按参考图顺序引用，再写镜头、动作和声音（Audio:）。",
+        "label": "พรอมต์ (Prompt)",
+        "description": "ใช้อ้างอิงตามลำดับภาพ เช่น <Picture 1>, <Picture 2>... แล้วตามด้วยมุมกล้อง การเคลื่อนไหว และเสียง (Audio:)",
         "binding": {
           "node": "20",
           "input": "prompt"
@@ -284,8 +279,8 @@
       },
       "width": {
         "type": "integer",
-        "label": "宽",
-        "description": "必须是 32 的倍数。",
+        "label": "ความกว้าง",
+        "description": "ต้องหารด้วย 32 ลงตัว",
         "binding": {
           "node": "20",
           "input": "width"
@@ -297,8 +292,8 @@
       },
       "height": {
         "type": "integer",
-        "label": "高",
-        "description": "必须是 32 的倍数。",
+        "label": "ความสูง",
+        "description": "ต้องหารด้วย 32 ลงตัว",
         "binding": {
           "node": "20",
           "input": "height"
@@ -310,8 +305,8 @@
       },
       "length": {
         "type": "integer",
-        "label": "帧数（24 帧/秒）",
-        "description": "124 帧约 5 秒，362 帧约 15 秒；会向上取到 17k+5。",
+        "label": "จำนวนเฟรม (24 fps)",
+        "description": "124 เฟรมประมาณ 5 วินาที, 362 เฟรมประมาณ 15 วินาที โดยจะปัดเศษขึ้นเป็น 17k+5",
         "binding": {
           "node": "20",
           "input": "length"
@@ -323,8 +318,8 @@
       },
       "seed": {
         "type": "integer",
-        "label": "随机种子",
-        "description": "-1 表示每次随机。",
+        "label": "Seed สุ่ม",
+        "description": "-1 หมายถึงสุ่มใหม่ทุกครั้ง",
         "binding": {
           "node": "23",
           "input": "noise_seed"

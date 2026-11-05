@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "========================================================"
-echo "  Colab GPU Studio — Android Termux 一键安装与启动脚本"
+echo "  Colab GPU Studio — สคริปต์ติดตั้งและเริ่มใช้งานบน Android Termux"
 echo "========================================================"
 
 SRC_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -12,8 +12,8 @@ SRC_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 case "$SRC_DIR" in
   /storage/*|/sdcard/*)
     TARGET_DIR="$HOME/colab-gpu-studio"
-    echo "[提示] 检测到当前目录位于安卓共享存储 ($SRC_DIR)，不支持软链接与可执行权限。"
-    echo "       正在自动同步到 Termux 内部目录: $TARGET_DIR ..."
+    echo "[คำแนะนำ] ตรวจพบว่าไดเรกทอรีปัจจุบันอยู่บน Android Shared Storage ($SRC_DIR) ซึ่งไม่รองรับ Symlink และสิทธิ์การ Execute"
+    echo "       กำลังซิงค์ไปยังไดเรกทอรีภายในของ Termux โดยอัตโนมัติ: $TARGET_DIR ..."
     mkdir -p "$TARGET_DIR"
     cp -rf "$SRC_DIR"/* "$TARGET_DIR"/
     if [ -f "$SRC_DIR/.env.example" ]; then
@@ -32,20 +32,20 @@ esac
 cd "$ROOT_DIR"
 
 if ! command -v pkg >/dev/null 2>&1; then
-  echo "提示：未检测到 Termux pkg 命令，将尝试使用当前系统 Python 环境运行。"
+  echo "คำแนะนำ: ไม่พบคำสั่ง pkg ของ Termux จะพยายามรันด้วย Python ของระบบปัจจุบัน"
 else
-  echo "[1/4] 正在安装系统基础与预编译扩展包 (python, python-cryptography, python-pillow)..."
+  echo "[1/4] กำลังติดตั้งแพ็กเกจพื้นฐานและส่วนขยายที่คอมไพล์แล้ว (python, python-cryptography, python-pillow)..."
   pkg update -y
   pkg install -y python python-pip python-cryptography python-pillow git openssl libffi
 fi
 
 if [ ! -x ".venv/bin/python" ] || ! grep -q "include-system-site-packages = true" ".venv/pyvenv.cfg" 2>/dev/null; then
   rm -rf .venv
-  echo "[2/4] 正在创建本地 Python 虚拟环境（复用系统预编译扩展）..."
+  echo "[2/4] กำลังสร้าง Python Virtual Environment (นำส่วนขยายที่คอมไพล์แล้วของระบบมาใช้)..."
   python3 -m venv --system-site-packages .venv
 fi
 
-echo "[3/4] 正在安装 Python 依赖（使用 Termux 专用二进制轮子仓库，无需现场编译）..."
+echo "[3/4] กำลังติดตั้ง Dependencies ของ Python (ใช้คลัง Precompiled Wheels สำหรับ Termux โดยไม่ต้องคอมไพล์เอง)..."
 ./.venv/bin/pip install --upgrade pip
 
 # Clean requirements for Termux:
@@ -62,10 +62,10 @@ grep -Ev '^(psycopg|cryptography==|pillow==|argon2)' requirements.lock > .requir
 
 rm -f .requirements-termux.txt
 
-echo "[4/4] 启动 Colab GPU Studio..."
+echo "[4/4] กำลังเริ่มต้น Colab GPU Studio..."
 if command -v termux-wake-lock >/dev/null 2>&1; then
   termux-wake-lock || true
-  echo "已开启 Termux WakeLock 防止后台休眠。"
+  echo "เปิดใช้งาน Termux WakeLock เพื่อป้องกันการหลับเบื้องหลังแล้ว"
 fi
 
 export PYTHONPATH="$ROOT_DIR/api${PYTHONPATH:+:$PYTHONPATH}"

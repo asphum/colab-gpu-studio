@@ -33,14 +33,14 @@ def resolve_input_images(own_asset, project_id: str, manifest: dict, params: dic
             continue
         asset = own_asset(params[name])
         if asset.get("project_id") != project_id:
-            raise APIError("ASSET_PROJECT_MISMATCH", "参考素材不属于当前项目")
+            raise APIError("ASSET_PROJECT_MISMATCH", "ไฟล์อ้างอิงไม่ได้เป็นของโปรเจกต์ปัจจุบัน")
         if asset.get("mime") not in ("image/png", "image/jpeg", "image/webp"):
-            raise APIError("VALIDATION_ERROR", f"参数 {name} 只接受 PNG/JPEG/WebP 图片")
+            raise APIError("VALIDATION_ERROR", f"พารามิเตอร์ {name} รับเฉพาะรูปภาพ PNG/JPEG/WebP เท่านั้น")
         filename = f"input_{name}.jpg"
         resolved[name] = filename
         files.append({"filename": filename, "content": _jpeg(asset_path(asset).read_bytes(), spec.get("max_edge", DEFAULT_MAX_EDGE))})
     if sum(len(f["content"]) for f in files) > MAX_TOTAL_BYTES:
-        raise APIError("VALIDATION_ERROR", "参考图压缩后仍超过 400KB（随启动代码发送的上限），请少选几张或换小图")
+        raise APIError("VALIDATION_ERROR", "ภาพอ้างอิงหลังบีบอัดแล้วยังมีขนาดเกิน 400KB (ขีดจำกัดที่ส่งพร้อมโค้ดเริ่มต้น) โปรดลดจำนวนภาพหรือเลือกภาพที่มีขนาดเล็กลง")
     for f in files:
         f["content_b64"] = base64.b64encode(f.pop("content")).decode("ascii")
     return resolved, files

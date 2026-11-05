@@ -134,7 +134,7 @@ def test_registry_validate_allows_disabled_real_model_but_publish_requires_licen
         {"smoke_test_passed": True, "smoke_test_kind": "real", "review_approved": True},
         "owner",
     )
-    with pytest.raises(ValueError, match="许可|license"):
+    with pytest.raises(ValueError, match="สัญญาอนุญาต|license|许可"):
         registry.publish("owner", row["id"], confirmed=True)
 
 
@@ -142,7 +142,7 @@ def test_workflow_owner_key_version_is_database_unique(tmp_path):
     repo = Repository(_store(tmp_path))
     data = {"workflow_key": "same", "workflow_version": 1, "model_id": "demo"}
     repo.create("workflows", "owner", data)
-    with pytest.raises(ValueError, match="唯一|存在"):
+    with pytest.raises(ValueError, match="เอกลักษณ์|unique|唯一|存在"):
         repo.create("workflows", "owner", data)
     assert repo.create("workflows", "other", data)["owner_id"] == "other"
 

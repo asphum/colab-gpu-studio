@@ -205,5 +205,5 @@ def test_delete_requires_owner_and_get_404_confirmation():
     )
     # An already-absent owned runtime is confirmed by GET, without an unnecessary DELETE.
     assert paths == [("GET", "/v1beta/runtimes/atelier-runtime-1")]
-    with pytest.raises(Exception, match="归属"):
+    with pytest.raises(Exception, match="ความเป็นเจ้าของ|归属"):
         provider.delete({"runtime_name": "runtimes/other", "runtime_id": "other", "owner_id": "other-owner"})

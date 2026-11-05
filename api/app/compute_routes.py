@@ -17,14 +17,14 @@ def cuda_smoke(body: dict, request: Request, user=Depends(current_user), st=Depe
     admin(user)
     cfg = GpuConfig.from_env()
     if body.get("confirmed") is not True:
-        raise APIError("CONFIRMATION_REQUIRED", "此测试会真实消费点数，必须明确确认", 403)
+        raise APIError("CONFIRMATION_REQUIRED", "การทดสอบนี้จะใช้คะแนนจริง ต้องได้รับการยืนยันอย่างชัดเจน", 403)
     if not cfg.real_enabled:
-        raise APIError("REAL_GPU_DISABLED", "真实 GPU 开关尚未启用")
+        raise APIError("REAL_GPU_DISABLED", "สวิตช์ GPU จริงยังไม่ได้เปิดใช้งาน")
     if cfg.unit_rate is None or cfg.unit_rate <= 0:
-        raise APIError("RATE_UNKNOWN", "必须先填写每分钟估算费率和预算")
+        raise APIError("RATE_UNKNOWN", "ต้องระบุอัตราค่าบริการประเมินต่อนาทีและงบประมาณก่อน")
     key = request.headers.get("Idempotency-Key")
     if not key or len(key) > 200:
-        raise APIError("IDEMPOTENCY_REQUIRED", "必须提供固定幂等键，重试沿用原值")
+        raise APIError("IDEMPOTENCY_REQUIRED", "ต้องระบุ Idempotency Key ที่แน่นอน หากลองใหม่ให้ใช้ค่าเดิม")
     repo = Repository(st)
     previous = next((j for j in repo.list("jobs", user["id"]) if j.get("idempotency_key") == key), None)
     raw = {
@@ -34,11 +34,11 @@ def cuda_smoke(body: dict, request: Request, user=Depends(current_user), st=Depe
     }
     if previous:
         if previous.get("body_hash") != digest(raw):
-            raise APIError("IDEMPOTENCY_CONFLICT", "幂等键已用于其他参数", 409)
+            raise APIError("IDEMPOTENCY_CONFLICT", "Idempotency Key นี้ถูกใช้กับพารามิเตอร์อื่นไปแล้ว", 409)
         return ok({"id": previous["id"], "job_id": previous["id"], "state": previous["state"]}, request, 202)
     google = GoogleService(repo, user["id"])
     if not google.status()["colab"]["connected"]:
-        raise APIError("GOOGLE_NOT_CONNECTED", "请先完成个人 Colab OAuth 授权")
+        raise APIError("GOOGLE_NOT_CONNECTED", "กรุณายืนยันสิทธิ์ Colab OAuth ส่วนตัวก่อน")
     specs = GoogleColabProvider(repo, user["id"]).list_specs()
     eligible = [
         s
@@ -49,14 +49,14 @@ def cuda_smoke(body: dict, request: Request, user=Depends(current_user), st=Depe
     if requested:
         eligible = [s for s in eligible if s.get("key") == requested.get("key", requested)]
     if not eligible:
-        raise APIError("GPU_UNAVAILABLE", "当前账号没有符合请求的可用 GPU 规格")
+        raise APIError("GPU_UNAVAILABLE", "บัญชีปัจจุบันไม่มีสเปก GPU ที่พร้อมใช้งานตรงตามที่ร้องขอ")
     project_id = "system-smoke-" + user["id"][:40]
     with st.dispatch_lock() as acquired:
         if not acquired:
-            raise APIError("SCHEDULER_BUSY", "调度正在同步，请稍后用相同幂等键重试", 503, True)
+            raise APIError("SCHEDULER_BUSY", "ระบบจัดคิวกำลังซิงค์ข้อมูล กรุณาลองใหม่ในภายหลังด้วย Idempotency Key เดิม", 503, True)
         if not st.get("projects", project_id, user["id"]):
             st.create(
-                "projects", user["id"], {"title": "GPU 可行性检查", "system": True}, record_id=project_id
+                "projects", user["id"], {"title": "การตรวจสอบความพร้อมของ GPU", "system": True}, record_id=project_id
             )
         job, created = repo.create_job(user["id"], raw, key)
         if created:
@@ -96,7 +96,7 @@ def cuda_smoke(body: dict, request: Request, user=Depends(current_user), st=Depe
                 job["id"],
                 user["id"],
                 "queued",
-                f"已确认真实 CUDA 冒烟：仅测试 GPU，最长{raw['max_runtime_minutes']}分钟，结束即释放运行时",
+                f"ยืนยันการทดสอบ CUDA Smoke จริงแล้ว: ทดสอบเฉพาะ GPU สูงสุด {raw['max_runtime_minutes']} นาที และจะปล่อยคืน runtime ทันทีเมื่อเสร็จสิ้น",
             )
     return ok(
         {

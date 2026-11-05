@@ -124,7 +124,7 @@ def test_builtin_templates_cannot_be_published_without_local_approval():
         if row["model_id"] == "demo-mock":
             continue
         registry.validate("catalog-owner", row["id"])
-        with pytest.raises(ValueError, match="模型未启用"):
+        with pytest.raises(ValueError, match="โมเดลยังไม่เปิดใช้งาน|模型未启用"):
             registry.publish("catalog-owner", row["id"], confirmed=True)
     assert not repo.list("jobs") and not repo.list("leases")
 

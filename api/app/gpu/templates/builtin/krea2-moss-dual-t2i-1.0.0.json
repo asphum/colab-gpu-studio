@@ -3,7 +3,7 @@
   "model_id": "krea2-moss-dual",
   "model": {
     "model_id": "krea2-moss-dual",
-    "display_name": "Krea-2 Turbo + MOSS-Image 双采样",
+    "display_name": "Krea-2 Turbo + MOSS-Image Dual Sampling",
     "revision": "588feaf955b08b9ac4723eeb751752ab045dba71",
     "source": "https://huggingface.co/Comfy-Org/Krea-2",
     "license": "krea-2-community-license + apache-2.0 (MOSS-Image)",
@@ -22,8 +22,8 @@
     "workflow_key": "krea2-moss-dual-t2i",
     "model_id": "krea2-moss-dual",
     "version": "1.0.0",
-    "title": "Krea-2 Turbo + MOSS 双采样文生图",
-    "description": "先用 Krea-2 Turbo 出构图，再用 MOSS-Image SFT 以 0.36 重绘精修；固定在 Colab T4 高内存上运行。",
+    "title": "Krea-2 Turbo + MOSS Dual Sampling สร้างภาพจากข้อความ",
+    "description": "ใช้ Krea-2 Turbo วางโครงสร้างภาพก่อน จากนั้นใช้ MOSS-Image SFT รีไฟน์เก็บรายละเอียดด้วย Denoise 0.36 กำหนดรันบน Colab T4 HighRAM",
     "modality": "image",
     "executor": "comfyui",
     "compute_spec": {
@@ -35,8 +35,8 @@
     "parameters": {
       "prompt": {
         "type": "string",
-        "label": "提示词",
-        "description": "两段采样共用同一段提示词。",
+        "label": "พรอมต์ (Prompt)",
+        "description": "การสุ่มตัวอย่างทั้งสองขั้นตอนใช้พรอมต์เดียวกัน",
         "binding": {
           "node": "1",
           "input": "value"
@@ -46,8 +46,8 @@
       },
       "width": {
         "type": "integer",
-        "label": "宽",
-        "description": "必须是 16 的倍数。",
+        "label": "ความกว้าง",
+        "description": "ต้องหารด้วย 16 ลงตัว",
         "binding": {
           "node": "14",
           "input": "width"
@@ -59,8 +59,8 @@
       },
       "height": {
         "type": "integer",
-        "label": "高",
-        "description": "必须是 16 的倍数。",
+        "label": "ความสูง",
+        "description": "ต้องหารด้วย 16 ลงตัว",
         "binding": {
           "node": "14",
           "input": "height"
@@ -72,8 +72,8 @@
       },
       "seed": {
         "type": "integer",
-        "label": "Krea 随机种子",
-        "description": "-1 表示每次随机。",
+        "label": "Seed สุ่มของ Krea",
+        "description": "-1 หมายถึงสุ่มใหม่ทุกครั้ง",
         "binding": {
           "node": "15",
           "input": "seed"
@@ -85,7 +85,7 @@
       },
       "krea_steps": {
         "type": "integer",
-        "label": "Krea 步数",
+        "label": "จำนวนก้าว Krea (Steps)",
         "description": "",
         "binding": {
           "node": "15",
@@ -98,7 +98,7 @@
       },
       "moss_seed": {
         "type": "integer",
-        "label": "MOSS 随机种子",
+        "label": "Seed สุ่มของ MOSS",
         "description": "",
         "binding": {
           "node": "35",
@@ -111,7 +111,7 @@
       },
       "moss_steps": {
         "type": "integer",
-        "label": "MOSS 步数",
+        "label": "จำนวนก้าว MOSS (Steps)",
         "description": "",
         "binding": {
           "node": "35",
@@ -124,7 +124,7 @@
       },
       "moss_cfg": {
         "type": "number",
-        "label": "MOSS 提示词强度",
+        "label": "ความแรงพรอมต์ MOSS (CFG)",
         "description": "",
         "binding": {
           "node": "35",
@@ -138,8 +138,8 @@
       },
       "moss_denoise": {
         "type": "number",
-        "label": "MOSS 重绘幅度",
-        "description": "越大越偏离 Krea 的底图。",
+        "label": "ระยะการรีดรอว์ MOSS (Denoise)",
+        "description": "ยิ่งมาก ยิ่งเปลี่ยนไปจากภาพร่างของ Krea",
         "binding": {
           "node": "35",
           "input": "denoise"

@@ -147,7 +147,7 @@ def usage(st, owner):
         "max_runtime_minutes": cfg.max_runtime_minutes,
         "active_runtimes": len(leases),
         "ledger": rows,
-        "notice": "费率为管理员手工估算；实际扣费以 Google 账户为准。Mock 不创建 GPU，不产生真实点数消费。",
+        "notice": "อัตราค่าบริการเป็นค่าประมาณการจากผู้ดูแลระบบ การหักค่าใช้จ่ายจริงยึดตามบัญชี Google เป็นหลัก โหมด Mock ไม่สร้าง GPU และไม่เกิดค่าใช้จ่ายจริง",
     }
 
 
@@ -175,9 +175,9 @@ async def security_context(request, call_next):
                 from urllib.parse import urlsplit
 
                 if urlsplit(origin).netloc != request.url.netloc:
-                    raise APIError("CSRF_ORIGIN", "跨站写入被拒绝", 403)
+                    raise APIError("CSRF_ORIGIN", "คำขอข้ามไซต์ (Cross-Origin) ถูกปฏิเสธ", 403)
         if int(request.headers.get("Content-Length", "0")) > settings.max_upload_bytes + 1048576:
-            raise APIError("PAYLOAD_TOO_LARGE", "请求超过上传限制", 413)
+            raise APIError("PAYLOAD_TOO_LARGE", "ขนาดคำขอเกินขีดจำกัดการอัปโหลด", 413)
         response = await call_next(request)
     except APIError as exc:
         response = error_response(request, exc)
@@ -206,7 +206,7 @@ async def api_error(request, exc):
 async def validation_error(request, exc):
     # Do not return rejected input values (they may contain secrets).
     return error_response(
-        request, APIError("VALIDATION_ERROR", "请求格式错误，请检查参数类型与必填字段", 422)
+        request, APIError("VALIDATION_ERROR", "รูปแบบคำขอไม่ถูกต้อง โปรดตรวจสอบประเภทพารามิเตอร์และฟิลด์ที่จำเป็น", 422)
     )
 
 
@@ -217,12 +217,12 @@ async def value_error(request, exc):
 
 @app.exception_handler(KeyError)
 async def key_error(request, exc):
-    return error_response(request, APIError("NOT_FOUND", "资源不存在", 404))
+    return error_response(request, APIError("NOT_FOUND", "ไม่พบทรัพยากร", 404))
 
 
 @app.exception_handler(Exception)
 async def internal_error(request, exc):
-    return error_response(request, APIError("INTERNAL_ERROR", "后台操作失败，请查看已脱敏的任务事件", 500))
+    return error_response(request, APIError("INTERNAL_ERROR", "การดำเนินการหลังบ้านล้มเหลว โปรดดูบันทึกเหตุการณ์ของงานที่คัดกรองข้อมูลลับแล้ว", 500))
 
 
 @app.get("/api/health")
@@ -243,11 +243,11 @@ def login(body: Login, request: Request):
     key = request.client.host if request.client else "unknown"
     previous = [t for t in _login_limits.get(key, []) if t > time.monotonic() - 60]
     if len(previous) >= 10:
-        raise APIError("RATE_LIMITED", "登录尝试过于频繁，请稍后重试", 429)
+        raise APIError("RATE_LIMITED", "พยายามเข้าสู่ระบบถี่เกินไป กรุณาลองใหม่ในภายหลัง", 429)
     previous.append(time.monotonic())
     _login_limits[key] = previous
     if not settings.studio_password or not secrets.compare_digest(body.password, settings.studio_password):
-        raise APIError("INVALID_CREDENTIALS", "密码不正确或尚未初始化", 401)
+        raise APIError("INVALID_CREDENTIALS", "รหัสผ่านไม่ถูกต้อง หรือยังไม่ได้กำหนดค่าเริ่มต้น", 401)
     token = sign_session(
         {"uid": "owner", "role": "admin", "iat": int(time.time()), "exp": int(time.time()) + 43200}
     )
@@ -277,7 +277,7 @@ def projects(request: Request, user=Depends(current_user), st=Depends(get_store)
 def create_project(body: dict, request: Request, user=Depends(current_user), st=Depends(get_store)):
     title = str(body.get("title", "")).strip()[:200]
     if not title:
-        raise APIError("VALIDATION_ERROR", "项目名称不能为空")
+        raise APIError("VALIDATION_ERROR", "ชื่อโปรเจกต์ต้องไม่เป็นค่าว่าง")
     return ok(
         st.create(
             "projects",
@@ -293,10 +293,10 @@ def create_project(body: dict, request: Request, user=Depends(current_user), st=
 def update_project(project_id: str, body: dict, request: Request, user=Depends(current_user), st=Depends(get_store)):
     own(st, "projects", project_id, user)
     if "title" not in body:
-        raise APIError("PROJECT_INVALID", "仅支持修改本地项目名称")
+        raise APIError("PROJECT_INVALID", "รองรับเฉพาะการแก้ไขชื่อโปรเจกต์ภายในเครื่องเท่านั้น")
     title = str(body["title"]).strip()[:200]
     if not title:
-        raise APIError("PROJECT_INVALID", "项目名不能为空")
+        raise APIError("PROJECT_INVALID", "ชื่อโปรเจกต์ต้องไม่เป็นค่าว่าง")
     return ok(st.update("projects", project_id, {"title": title}, user["id"]), request)
 
 
@@ -326,7 +326,7 @@ def register_model(body: dict, request: Request, user=Depends(current_user), st=
         or len(model_id) > 100
         or any(x.get("model_id") == model_id for x in repo.list("models", user["id"]))
     ):
-        raise APIError("MODEL_INVALID", "模型 ID 无效或已存在")
+        raise APIError("MODEL_INVALID", "รหัสโมเดลไม่ถูกต้องหรือมีอยู่แล้ว")
     allowed = {
         "model_id",
         "display_name",
@@ -339,7 +339,7 @@ def register_model(body: dict, request: Request, user=Depends(current_user), st=
     }
     payload = {k: v for k, v in body.items() if k in allowed}
     payload.update(
-        enabled=False, is_mock=False, disabled_reason="待管理员来源审查、许可验证和真实 GPU 冒烟测试"
+        enabled=False, is_mock=False, disabled_reason="รอผู้ดูแลระบบตรวจสอบแหล่งที่มา สัญญาอนุญาต และทดสอบความพร้อมบน GPU จริง"
     )
     return ok(repo.create("models", user["id"], payload), request, 201)
 
@@ -397,7 +397,7 @@ def cloud_sync_workflow(st, owner, row):
         content = json.dumps(row.get(field, {}), ensure_ascii=False, sort_keys=True).encode()
         record = storage.put(folder + "/" + name, content, "application/json")
         if not storage.verify(record, content):
-            raise APIError("DRIVE_VERIFY_FAILED", "工作流保存后校验失败")
+            raise APIError("DRIVE_VERIFY_FAILED", "การตรวจสอบเวิร์กโฟลว์หลังบันทึกล้มเหลว")
         records[field] = record
     return Repository(st).update("workflows", row["id"], {"drive_files": records}, owner)
 
@@ -406,7 +406,7 @@ def cloud_sync_workflow(st, owner, row):
 def import_workflow(body: dict, request: Request, user=Depends(current_user), st=Depends(get_store)):
     admin(user)
     if len(json.dumps(body)) > 5 * 1024 * 1024:
-        raise APIError("WORKFLOW_TOO_LARGE", "工作流 JSON 过大", 413)
+        raise APIError("WORKFLOW_TOO_LARGE", "ไฟล์ JSON ของเวิร์กโฟลว์มีขนาดใหญ่เกินไป", 413)
     repo, registry = repo_registry(st, user)
     manifest = body.get("manifest") or {}
     body = {
@@ -434,7 +434,7 @@ def smoke_workflow(workflow_id: str, request: Request, user=Depends(current_user
     if not model or not model.get("is_mock"):
         raise APIError(
             "REAL_SMOKE_REQUIRES_REVIEW",
-            "真实工作流须先通过来源审查并完成受预算保护的 GPU 冒烟；不能提交客户端伪造证据",
+            "เวิร์กโฟลว์จริงต้องผ่านการตรวจสอบแหล่งที่มาและรัน GPU Smoke Test ภายใต้การจำกัดงบประมาณก่อน ไม่สามารถส่งหลักฐานทดสอบปลอมได้",
         )
     validate_manifest(row["manifest"], row["api_graph"], row["object_info"])
     params = resolve_parameters(row["manifest"], {})
@@ -451,7 +451,7 @@ def smoke_workflow(workflow_id: str, request: Request, user=Depends(current_user
     executor.start({"runtime_name": "mock-static-smoke"}, test_job, test_job["execution_id"])
     result = executor.poll({"runtime_name": "mock-static-smoke"}, test_job)
     if result.get("state") != "completed" or not result.get("outputs"):
-        raise APIError("SMOKE_FAILED", "模拟执行冒烟未通过")
+        raise APIError("SMOKE_FAILED", "การทดสอบจำลอง (Simulation Smoke Test) ไม่ผ่าน")
     return ok(
         repo.update(
             "workflows", workflow_id, {"smoke_test_passed": True, "smoke_test_kind": "mock"}, user["id"]
@@ -500,7 +500,7 @@ def save_preset(body: dict, request: Request, user=Depends(current_user), st=Dep
         "presets",
         user["id"],
         {
-            "name": str(body.get("name", "未命名预设"))[:100],
+            "name": str(body.get("name", "พรีเซ็ตไม่มีชื่อ"))[:100],
             "workflow_version_id": workflow["id"],
             "overrides": overrides,
         },
@@ -532,33 +532,33 @@ class JobInput(BaseModel):
 def admit_job(st, user, body, key):
     repo, registry = repo_registry(st, user)
     if not key or len(key) > 200:
-        raise APIError("IDEMPOTENCY_REQUIRED", "必须提供 Idempotency-Key，重试必须沿用原值")
+        raise APIError("IDEMPOTENCY_REQUIRED", "ต้องระบุ Idempotency-Key และหากลองใหม่ต้องใช้ค่าเดิม")
     existing = next((j for j in repo.list("jobs", user["id"]) if j.get("idempotency_key") == key), None)
     if existing:
         if existing.get("body_hash") != digest(body):
-            raise APIError("IDEMPOTENCY_CONFLICT", "相同幂等键不能用于不同参数", 409)
+            raise APIError("IDEMPOTENCY_CONFLICT", "Idempotency Key เดียวกันไม่สามารถใช้กับพารามิเตอร์ที่ต่างกันได้", 409)
         return existing
     project = own(st, "projects", body["project_id"], user)
     cfg = GpuConfig.from_env()
     policy = body["execution_policy"]
     if policy["provider"] not in {"mock", "colab"}:
-        raise APIError("PROVIDER_INVALID", "仅允许已配置的 mock 或 colab Provider")
+        raise APIError("PROVIDER_INVALID", "อนุญาตเฉพาะ Provider mock หรือ colab ที่กำหนดค่าไว้เท่านั้น")
     if policy["provider"] == "colab" and not cfg.real_enabled:
-        raise APIError("REAL_GPU_DISABLED", "真实 GPU 默认关闭：请先配置 OAuth、费率预算并完成模型审查")
+        raise APIError("REAL_GPU_DISABLED", "GPU จริงถูกปิดไว้เป็นค่าเริ่มต้น: กรุณาตั้งค่า OAuth, งบประมาณ และผ่านการตรวจสอบโมเดลก่อน")
     if not policy["shutdown_after_job"] or policy["idle_grace_minutes"] != 0:
-        raise APIError("POLICY_RESTRICTED", "当前版本强制任务后释放 GPU，不允许客户端延长闲置")
+        raise APIError("POLICY_RESTRICTED", "เวอร์ชันปัจจุบันบังคับปล่อยคืน GPU ทันทีหลังจบงาน ไม่อนุญาตให้ขยายเวลา idle")
     workflow = registry.get_workflow(user["id"], body["workflow_key"], body["workflow_version"])
     if workflow.get("state") != "published" or workflow["model_id"] != body["model_id"]:
-        raise APIError("WORKFLOW_UNPUBLISHED", "工作流未发布或与模型不匹配")
+        raise APIError("WORKFLOW_UNPUBLISHED", "เวิร์กโฟลว์ยังไม่ได้เผยแพร่หรือไม่ตรงกับโมเดล")
     model = next((m for m in registry.models(user["id"]) if m["model_id"] == body["model_id"]), None)
     if not model or not model.get("enabled"):
-        raise APIError("MODEL_UNAVAILABLE", "模型尚未通过许可、权重与硬件验证")
+        raise APIError("MODEL_UNAVAILABLE", "โมเดลยังไม่ผ่านการตรวจสอบสัญญาอนุญาต น้ำหนัก และฮาร์ดแวร์")
     if bool(model.get("is_mock")) != (policy["provider"] == "mock"):
-        raise APIError("EXECUTOR_MISMATCH", "模拟模板只能使用 Mock，真实模型不能伪装模拟成功")
+        raise APIError("EXECUTOR_MISMATCH", "เทมเพลตจำลองใช้ได้เฉพาะ Mock โมเดลจริงไม่สามารถแกล้งจำลองสำเร็จได้")
     validate_manifest(workflow["manifest"], workflow["api_graph"], workflow["object_info"])
     preset = own(repo, "presets", body["preset_id"], user) if body.get("preset_id") else None
     if preset and preset["workflow_version_id"] != workflow["id"]:
-        raise APIError("PRESET_INCOMPATIBLE", "预设属于不同工作流版本，请先迁移预设")
+        raise APIError("PRESET_INCOMPATIBLE", "พรีเซ็ตเป็นของเวิร์กโฟลว์คนละเวอร์ชัน กรุณาย้ายพรีเซ็ตก่อน")
     params = resolve_parameters(
         workflow["manifest"], body["params"], preset.get("overrides") if preset else None
     )
@@ -569,7 +569,7 @@ def admit_job(st, user, body, key):
     for asset_id in body["asset_ids"]:
         asset = own(st, "assets", asset_id, user)
         if asset["project_id"] != project["id"]:
-            raise APIError("ASSET_PROJECT_MISMATCH", "参考素材不属于当前项目")
+            raise APIError("ASSET_PROJECT_MISMATCH", "ไฟล์อ้างอิงไม่ได้เป็นของโปรเจกต์ปัจจุบัน")
     snapshot = {
         "manifest": workflow["manifest"],
         "api_graph": workflow["api_graph"],
@@ -583,22 +583,22 @@ def admit_job(st, user, body, key):
     }
     if policy["provider"] == "colab":
         if not workflow.get("review_approved") or workflow.get("smoke_test_kind") != "real":
-            raise APIError("REVIEW_REQUIRED", "真实工作流尚未通过后台审核及真实冒烟")
+            raise APIError("REVIEW_REQUIRED", "เวิร์กโฟลว์จริงยังไม่ผ่านการตรวจสอบหลังบ้านและการทดสอบความพร้อมจริง")
         snapshot["manifest"] = {**snapshot["manifest"], "state": "published", "reviewed": True}
         if cfg.unit_rate is None:
-            raise APIError("RATE_UNKNOWN", "未设置可信的估算费率，拒绝开机")
+            raise APIError("RATE_UNKNOWN", "ยังไม่ได้ตั้งค่าอัตราค่าบริการประเมินที่เชื่อถือได้ ปฏิเสธการเปิดเครื่อง")
         from .gpu.google import GoogleService
 
         status = GoogleService(repo, user["id"]).status()
         if not status["colab"]["connected"]:
-            raise APIError("GOOGLE_NOT_CONNECTED", "请先授权个人 Google Colab 账户")
+            raise APIError("GOOGLE_NOT_CONNECTED", "กรุณายืนยันสิทธิ์บัญชีส่วนตัวของ Google Colab ก่อน")
     # After the published stamp, so the curated LoRA weight files stay in the manifest the runtime restores.
     if body.get("loras"):
         _apply_loras(repo, user, workflow, body["loras"], snapshot, policy["provider"])
     # A worker cannot observe a queued record without its immutable snapshot.
     with st.dispatch_lock() as acquired:
         if not acquired:
-            raise APIError("SCHEDULER_BUSY", "队列正在同步，请用相同幂等键稍后重试", 503, True)
+            raise APIError("SCHEDULER_BUSY", "คิวกำลังซิงค์ข้อมูล กรุณาลองใหม่ในภายหลังด้วย Idempotency Key เดิม", 503, True)
         job, created = repo.create_job(user["id"], body, key)
         if created:
             job = repo.update(
@@ -613,21 +613,21 @@ def admit_job(st, user, body, key):
                 },
                 user["id"],
             )
-            repo.event(job["id"], user["id"], "queued", "任务已持久化；手机关闭不会中断队列")
+            repo.event(job["id"], user["id"], "queued", "บันทึกงานลงฐานข้อมูลแล้ว การปิดมือถือจะไม่ทำให้คิวหลุด")
     return job
 
 
 def _apply_loras(repo, user, workflow, picks, snapshot, provider):
     """Curated picks become extra weight files; own picks are Drive files the runtime fetches."""
     if workflow["workflow_key"] not in lora_registry.H3_WORKFLOWS:
-        raise APIError("LORA_UNSUPPORTED", "这个工作流不支持自定义 LoRA")
+        raise APIError("LORA_UNSUPPORTED", "เวิร์กโฟลว์นี้ไม่รองรับ Custom LoRA")
     curated = {c["id"]: c for c in lora_registry.CURATED if workflow["workflow_key"] in c["workflows"]}
     own_files = None
     chain, weights, user_files = [], [], []
     for pick in picks:
         ref, strength = str(pick.get("id") or ""), pick.get("strength", 0.8)
         if not isinstance(strength, int | float) or not -3.0 <= strength <= 3.0:
-            raise APIError("VALIDATION_ERROR", "LoRA 强度需在 -3.0 到 3.0 之间")
+            raise APIError("VALIDATION_ERROR", "ความแรง LoRA ต้องอยู่ระหว่าง -3.0 ถึง 3.0")
         if ref in curated:
             weight = lora_registry.curated_weight(curated[ref])
             weights.append(weight)
@@ -637,7 +637,7 @@ def _apply_loras(repo, user, workflow, picks, snapshot, provider):
             own_files = {} if provider == "mock" else {f["id"]: f for f in _drive(repo, user).list_loras()}
         found = own_files.get(ref)
         if not found or not lora_registry.is_lora_file(found["name"], found["size"]):
-            raise APIError("LORA_NOT_FOUND", "LoRA 文件不在 Drive 的 loras/h3 文件夹里，或不是 1.5GB 以内的 .safetensors")
+            raise APIError("LORA_NOT_FOUND", "ไม่พบไฟล์ LoRA ในโฟลเดอร์ loras/h3 บน Drive หรือไฟล์ไม่ใช่ .safetensors ขนาดไม่เกิน 1.5GB")
         name = f"user/{found['id']}_{found['name']}"
         user_files.append({"id": found["id"], "name": found["name"], "size": found["size"], "md5Checksum": found["md5"], "target": name})
         chain.append((name, float(strength)))
@@ -665,8 +665,8 @@ def list_loras(request: Request, workflow_key: str | None = None, user=Depends(c
     try:
         files = _drive(Repository(st), user).list_loras()
     except Exception:  # noqa: BLE001 - Drive down must not hide the curated list
-        error = "暂时读不到 Drive 里的 LoRA 文件夹"
-    return ok({"curated": lora_registry.curated_for(workflow_key), "files": files, "folder": "AI-Studio/我的文件夹/loras/h3",
+        error = "ยังไม่สามารถอ่านโฟลเดอร์ LoRA บน Drive ได้ในขณะนี้"
+    return ok({"curated": lora_registry.curated_for(workflow_key), "files": files, "folder": "AI-Studio/โฟลเดอร์ของฉัน/loras/h3",
                "max_bytes": lora_registry.MAX_BYTES, "error": error}, request)
 
 
@@ -674,7 +674,7 @@ def list_loras(request: Request, workflow_key: str | None = None, user=Depends(c
 def lora_upload(body: dict, request: Request, user=Depends(current_user), st=Depends(get_store)):
     name, size = str(body.get("name") or "").strip(), body.get("size")
     if "/" in name or not lora_registry.is_lora_file(name, size if isinstance(size, int) else None):
-        raise APIError("VALIDATION_ERROR", "只接受 1.5GB 以内的 .safetensors 文件")
+        raise APIError("VALIDATION_ERROR", "รับเฉพาะไฟล์ .safetensors ขนาดไม่เกิน 1.5GB เท่านั้น")
     origin = request.headers.get("origin") or f"{request.url.scheme}://{request.url.netloc}"
     return ok({"upload_url": _drive(Repository(st), user).lora_upload_session(name, size, origin)}, request)
 
@@ -724,10 +724,10 @@ def cancel_job(job_id: str, request: Request, user=Depends(current_user), st=Dep
 def retry_job(job_id: str, request: Request, user=Depends(current_user), st=Depends(get_store)):
     original = own(Repository(st), "jobs", job_id, user)
     if original["state"] not in {"failed", "cancelled", "completed"}:
-        raise APIError("JOB_ACTIVE", "原任务尚未结束，不能重复提交")
+        raise APIError("JOB_ACTIVE", "งานเดิมยังไม่เสร็จสิ้น ไม่สามารถส่งซ้ำได้")
     key = request.headers.get("Idempotency-Key")
     if not key:
-        raise APIError("IDEMPOTENCY_REQUIRED", "再次生成需提供新的幂等键")
+        raise APIError("IDEMPOTENCY_REQUIRED", "การสร้างใหม่อีกครั้งต้องระบุ Idempotency Key ใหม่")
     return ok(public_job(admit_job(st, user, original["request_body"], key)), request, 202)
 
 
@@ -795,7 +795,7 @@ def download_asset(asset_id: str, user=Depends(current_user), st=Depends(get_sto
 def thumbnail(asset_id: str, user=Depends(current_user), st=Depends(get_store)):
     asset = own(st, "assets", asset_id, user)
     if not asset["mime"].startswith("image/"):
-        raise APIError("THUMBNAIL_UNAVAILABLE", "非图片素材不提供图片缩略图", 404)
+        raise APIError("THUMBNAIL_UNAVAILABLE", "ไฟล์ที่ไม่ใช่รูปภาพไม่มีภาพตัวอย่างขนาดย่อ", 404)
     with Image.open(asset_path(asset)) as image:
         image.thumbnail((480, 480))
         target = io.BytesIO()
@@ -809,7 +809,7 @@ def favorite_asset(
 ):
     own(st, "assets", asset_id, user)
     if not isinstance(body.get("favorite"), bool):
-        raise APIError("VALIDATION_ERROR", "favorite必须为布尔值")
+        raise APIError("VALIDATION_ERROR", "favorite ต้องเป็นค่าบูลีน (boolean)")
     return ok(
         public_asset(st.update("assets", asset_id, {"favorite": body["favorite"]}, user["id"])), request
     )
@@ -853,7 +853,7 @@ def compute_specs(
     if provider == "mock":
         return ok(MockColabProvider().list_specs(), request)
     if provider != "colab":
-        raise APIError("PROVIDER_INVALID", "不支持该 Provider")
+        raise APIError("PROVIDER_INVALID", "ไม่รองรับ Provider นี้")
     from .gpu.colab import GoogleColabProvider
 
     return ok(GoogleColabProvider(Repository(st), user["id"]).list_specs(), request)
@@ -932,7 +932,7 @@ def agent_invoke(body: dict, request: Request, st=Depends(get_store)):
     user = agent_user(request)
     tool, args = body.get("tool"), body.get("arguments", {})
     if tool not in AGENT_TOOLS or not isinstance(args, dict):
-        raise APIError("TOOL_FORBIDDEN", "Agent 不具备该工具权限；预算、发布与直接开机不可绕过", 403)
+        raise APIError("TOOL_FORBIDDEN", "Agent ไม่มีสิทธิ์เครื่องมือนี้ การจำกัดงบประมาณ การเผยแพร่ และการเปิดเครื่องโดยตรงไม่สามารถบายพาสได้", 403)
     repo, registry = repo_registry(st, user)
     if tool == "usage.inspect":
         result = usage(st, user["id"])
@@ -942,7 +942,7 @@ def agent_invoke(body: dict, request: Request, st=Depends(get_store)):
         result = next((m for m in registry.models(user["id"]) if m["model_id"] == args.get("model_id")), None)
     elif tool == "model.register_draft":
         if not args.get("model_id"):
-            raise APIError("MODEL_INVALID", "缺少模型 ID")
+            raise APIError("MODEL_INVALID", "ขาดรหัสโมเดล (model ID)")
         result = repo.create(
             "models",
             user["id"],
@@ -951,7 +951,7 @@ def agent_invoke(body: dict, request: Request, st=Depends(get_store)):
                 for k, v in args.items()
                 if k in {"model_id", "display_name", "source", "revision", "license", "resource_profile"}
             }
-            | {"enabled": False, "is_mock": False, "disabled_reason": "待管理员审查"},
+            | {"enabled": False, "is_mock": False, "disabled_reason": "รอผู้ดูแลระบบตรวจสอบ"},
         )
     elif tool == "workflow.import_draft":
         result = registry.import_workflow(user["id"], args)
@@ -973,7 +973,7 @@ def agent_invoke(body: dict, request: Request, st=Depends(get_store)):
         own(st, "projects", args.get("project_id"), user)
         result = [public_asset(a) for a in st.list("assets", user["id"], args["project_id"])]
     else:
-        raise APIError("TOOL_FORBIDDEN", "工具不可用", 403)
+        raise APIError("TOOL_FORBIDDEN", "เครื่องมือไม่พร้อมใช้งาน", 403)
     return ok(result, request)
 
 
@@ -1003,7 +1003,7 @@ if _static_root.exists():
     @app.get("/{path:path}", include_in_schema=False)
     def spa(path: str):
         if path.startswith("api/"):
-            raise APIError("NOT_FOUND", "接口不存在", 404)
+            raise APIError("NOT_FOUND", "ไม่พบ Endpoint นี้", 404)
         target = (_static_root / path).resolve()
         if path and target.is_relative_to(_static_root.resolve()) and target.is_file():
             return FileResponse(target)

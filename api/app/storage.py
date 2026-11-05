@@ -28,18 +28,18 @@ def asset_path(asset):
     key = asset.get("storage_key", "")
     path = (root / key).resolve()
     if not key or not path.is_relative_to(root) or path == root:
-        raise ValueError("非法素材路径")
+        raise ValueError("เส้นทางไฟล์ไม่ถูกต้อง (invalid asset path)")
     return path
 
 
 def save_asset(store, owner_id, project_id, content, filename, source_job_id=None, metadata=None):
     if not content or len(content) > settings.max_upload_bytes:
-        raise ValueError("文件为空或超过大小限制")
+        raise ValueError("ไฟล์ว่างเปล่าหรือมีขนาดเกินขีดจำกัด (empty or exceeds limit)")
     name = re.sub(r"[^\w.()\-\u4e00-\u9fff ]+", "_", Path(filename).name).strip(" .")[:140] or "file.bin"
     mime = mimetypes.guess_type(name)[0]
     if mime not in ALLOWED:
         if mime != "application/json" or not (metadata or {}).get("system_smoke"):
-            raise ValueError("不支持的素材类型")
+            raise ValueError("ประเภทไฟล์ไม่รองรับ (unsupported asset type)")
         __import__("json").loads(content)  # Diagnostic JSON only from the trusted CUDA executor.
     width = height = None
     if mime.startswith("image/"):
@@ -48,17 +48,17 @@ def save_asset(store, owner_id, project_id, content, filename, source_job_id=Non
         with Image.open(io.BytesIO(content)) as im:
             width, height = im.size
             if Image.MIME.get(im.format) != mime:
-                raise ValueError("图片扩展名与内容不符")
+                raise ValueError("นามสกุลรูปภาพไม่ตรงกับเนื้อหาไฟล์ (mismatched image extension)")
     elif mime == "video/mp4" and content[4:8] != b"ftyp":
-        raise ValueError("MP4内容无效")
+        raise ValueError("เนื้อหาไฟล์ MP4 ไม่ถูกต้อง (invalid MP4 content)")
     elif mime == "video/webm" and not content.startswith(b"\x1a\x45\xdf\xa3"):
-        raise ValueError("WebM内容无效")
+        raise ValueError("เนื้อหาไฟล์ WebM ไม่ถูกต้อง (invalid WebM content)")
     elif mime == "audio/wav" and not (content[:4] == b"RIFF" and content[8:12] == b"WAVE"):
-        raise ValueError("WAV内容无效")
+        raise ValueError("เนื้อหาไฟล์ WAV ไม่ถูกต้อง (invalid WAV content)")
     elif mime == "audio/mpeg" and not (
         content.startswith(b"ID3") or content[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2")
     ):
-        raise ValueError("MP3内容无效")
+        raise ValueError("เนื้อหาไฟล์ MP3 ไม่ถูกต้อง (invalid MP3 content)")
     key = f"{owner_id}/{project_id}/{uuid.uuid4().hex}-{name}"
     row = {
         "filename": name,
@@ -80,7 +80,7 @@ def save_asset(store, owner_id, project_id, content, filename, source_job_id=Non
     tmp.write_bytes(content)
     tmp.replace(target)
     if hashlib.sha256(target.read_bytes()).hexdigest() != row["sha256"]:
-        raise OSError("素材落盘校验失败")
+        raise OSError("การตรวจสอบไฟล์ลงดิสก์ล้มเหลว (asset disk write verification failed)")
     return store.create("assets", owner_id, row, project_id=project_id)
 
 

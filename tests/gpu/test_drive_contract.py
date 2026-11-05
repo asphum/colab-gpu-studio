@@ -191,7 +191,7 @@ def test_resumable_rejects_uncontrolled_location_before_bearer_is_sent():
     try:
         storage.put("outputs/2026/01/job-1/result.bin", content, "application/octet-stream")
     except DriveError as exc:
-        assert "会话地址" in str(exc)
+        assert "会话地址" in str(exc) or "เซสชัน" in str(exc)
     else:
         raise AssertionError("uncontrolled resumable location was accepted")
     assert all(request.url.host != "evil.example" for request in seen)

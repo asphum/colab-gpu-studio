@@ -42,26 +42,26 @@ MAX_OUTPUT_BYTES = 100 * 1024 * 1024
 
 # Stage markers written by runtime_worker.py into status.json while a job is running.
 _STAGE_TEXT = {
-    "restore_env": "正在恢复运行环境",
-    "restore_weights": "正在恢复模型文件",
-    "comfy_start": "正在启动 ComfyUI",
-    "sampling": "采样中",
-    "prep_env": "正在构建环境缓存",
-    "prep_weights": "正在补齐模型缓存",
+    "restore_env": "กำลังกู้คืนสภาพแวดล้อม",
+    "restore_weights": "กำลังกู้คืนไฟล์โมเดล",
+    "comfy_start": "กำลังเริ่มต้น ComfyUI",
+    "sampling": "กำลังสุ่มตัวอย่าง (Sampling)",
+    "prep_env": "กำลังสร้างแคชสภาพแวดล้อม",
+    "prep_weights": "กำลังเติมเต็มแคชโมเดล",
 }
 
 
 _PREP_TEXT = {
-    "GPU job validating": "正在校验缓存准备任务",
-    "GPU job validated": "缓存准备任务已校验",
-    "GPU capacity available": "CPU 运行时可用",
-    "GPU runtime allocated": "CPU 运行时已分配",
-    "GPU runtime is ready": "CPU 运行时已就绪",
-    "GPU execution started": "开始构建缓存",
-    "GPU execution completed": "缓存构建完成",
-    "GPU outputs persisted": "缓存已保存到 Drive",
-    "GPU cleanup completed": "CPU 运行时已关闭（缓存保留在 Drive）",
-    "GPU cleanup is pending": "正在关闭 CPU 运行时",
+    "GPU job validating": "กำลังตรวจสอบงานเตรียมแคช",
+    "GPU job validated": "งานเตรียมแคชผ่านการตรวจสอบแล้ว",
+    "GPU capacity available": "CPU Runtime พร้อมใช้งาน",
+    "GPU runtime allocated": "จัดสรร CPU Runtime แล้ว",
+    "GPU runtime is ready": "CPU Runtime พร้อมทำงานแล้ว",
+    "GPU execution started": "เริ่มสร้างแคช",
+    "GPU execution completed": "สร้างแคชเสร็จสมบูรณ์",
+    "GPU outputs persisted": "บันทึกแคชลงใน Drive แล้ว",
+    "GPU cleanup completed": "ปิด CPU Runtime แล้ว (แคชยังคงอยู่ใน Drive)",
+    "GPU cleanup is pending": "กำลังปิด CPU Runtime",
 }
 
 
@@ -290,7 +290,7 @@ class Scheduler:
                 prep_idempotency_key(cache_key(snapshot)), for_job_id=job["id"],
             )
         self._update("jobs", job["id"], {"prep_job_id": prep["id"]}, job.get("owner_id"))
-        self._event(job, "waiting_for_capacity", "准备缓存（CPU）：为这个任务自动准备环境和模型缓存，完成后自动开始", None)
+        self._event(job, "waiting_for_capacity", "เตรียมแคช (CPU): เตรียมสภาพแวดล้อมและแคชโมเดลสำหรับงานนี้โดยอัตโนมัติ และจะเริ่มทำงานต่อทันทีเมื่อเสร็จสิ้น", None)
         return True
 
     def _lease(self, job: dict) -> dict | None:
@@ -426,16 +426,16 @@ class Scheduler:
         except Exception as exc:
             raise ComputeError(self._safe_error(exc)) from exc
         if not isinstance(specs, list):
-            raise ComputeError("GPU runtime规格响应无效")
+            raise ComputeError("การตอบกลับสเปก GPU runtime ไม่ถูกต้อง")
         requested = job.get("requested_spec") or (job.get("execution_policy") or {}).get("requested_spec")
         requested_key = requested if isinstance(requested, str) else self._spec_key(requested or {})
         manifest_runtime = self._manifest_runtime(job)
         snapshot = job.get("snapshot") or {}
         smoke = snapshot.get("system_smoke") is True
         prep = snapshot.get("prep") is True
-        # 官方 runtimespecs 只返回 key(variant/accelerator/shape)，没有 runtime 版本或显存字段。
-        # 经审查的工作流在 manifest.compute_spec 里写明已冒烟验证过的规格 key，
-        # 普通任务只允许这个规格；管理员真实冒烟任务则按其请求的规格 key 运行。
+        # runtimespecs ทางการส่งกลับเฉพาะ key(variant/accelerator/shape) โดยไม่มีเวอร์ชัน runtime หรือ VRAM
+        # เวิร์กโฟลว์ที่ผ่านการตรวจสอบจะระบุ key สเปกที่ผ่านการทดสอบใน manifest.compute_spec
+        # งานปกติอนุญาตเฉพาะสเปกนี้ ส่วนงานทดสอบจริงของผู้ดูแลระบบจะรันตามสเปกที่ร้องขอ
         reviewed_key = self._spec_key({"key": (snapshot.get("manifest") or {}).get("compute_spec")})
         if prep:  # cache prep never needs a GPU: only the fixed CPU spec is allowed
             requested_key = reviewed_key = self._spec_key({"key": PREP_SPEC_KEY})
@@ -443,7 +443,7 @@ class Scheduler:
             requested_key = reviewed_key
         trusted = smoke or snapshot.get("workflow_smoke") is True or reviewed_key is not None
         if smoke and requested_key is None:
-            raise ComputeError("system smoke必须绑定已选择的GPU规格")
+            raise ComputeError("system smoke ต้องผูกกับสเปก GPU ที่เลือกไว้")
         eligible = []
         for spec in specs:
             if not isinstance(spec, dict) or spec.get("eligible") is not True or self._has_gpu(spec) == prep:
@@ -460,7 +460,7 @@ class Scheduler:
                 continue
             eligible.append(spec)
         if not eligible:
-            raise ComputeError("没有符合工作流runtime的GPU规格")
+            raise ComputeError("ไม่มีสเปก GPU ที่ตรงกับ runtime ของเวิร์กโฟลว์")
         return eligible[0]
 
     def _recover_unknown_create(self, job: dict, lease: dict, provider: Any) -> str | bool:

@@ -22,7 +22,7 @@ def main():
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     dest = out / ("gpu-studio-" + stamp + ".tgz")
     if not settings.database_url.startswith("sqlite:///"):
-        raise SystemExit("PostgreSQL请先使用pg_dump -Fc；不要把运行中的数据库目录直接打包。")
+        raise SystemExit("สำหรับ PostgreSQL โปรดใช้ pg_dump -Fc ก่อน อย่าบีบอัดไดเรกทอรีฐานข้อมูลที่กำลังทำงานอยู่โดยตรง")
     db = Path(settings.database_url.removeprefix("sqlite:///"))
     with tempfile.TemporaryDirectory(prefix="gpu-backup-") as d:
         snapshot = Path(d) / "studio.db"
@@ -41,7 +41,7 @@ def main():
                 {
                     "path": str(dest.resolve()),
                     "sha256": digest,
-                    "notice": "含加密业务凭据；主密钥需另行受限备份，未打包.env",
+                    "notice": "มีข้อมูลประจำตัวทางธุรกิจที่เข้ารหัส; คีย์หลักจำเป็นต้องสำรองแยกต่างหากในที่ปลอดภัย ไม่ได้รวมไฟล์ .env ในแพ็กเกจ",
                 },
                 ensure_ascii=False,
             )

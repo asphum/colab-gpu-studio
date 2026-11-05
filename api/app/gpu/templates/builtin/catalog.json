@@ -6,28 +6,28 @@
       "workflow_key": "krea2-moss-dual-t2i",
       "version": "1.0.0",
       "model_id": "krea2-moss-dual",
-      "title": "Krea-2 Turbo + MOSS 双采样文生图"
+      "title": "Krea-2 Turbo + MOSS Dual Sampling สร้างภาพจากข้อความ"
     },
     {
       "file": "minimax-h3-i2v-1.1.0.json",
       "workflow_key": "minimax-h3-i2v",
       "version": "1.1.0",
       "model_id": "minimax-h3",
-      "title": "MiniMax H3 图生视频（带声音）"
+      "title": "MiniMax H3 ภาพเป็นวิดีโอ (พร้อมเสียง)"
     },
     {
       "file": "minimax-h3-ref2v-1.4.0.json",
       "workflow_key": "minimax-h3-ref2v",
       "version": "1.4.0",
       "model_id": "minimax-h3",
-      "title": "MiniMax H3 多参考图生视频（带声音）"
+      "title": "MiniMax H3 วิดีโอจากภาพอ้างอิงหลายภาพ (พร้อมเสียง)"
     },
     {
       "file": "moss-image-sft-t2i-1.0.0.json",
       "workflow_key": "moss-image-sft-t2i",
       "version": "1.0.0",
       "model_id": "moss-image-sft",
-      "title": "MOSS-Image SFT 文生图"
+      "title": "MOSS-Image SFT สร้างภาพจากข้อความ"
     },
     {
       "file": "krea2-moss-dual-t2i-1.1.0.json",

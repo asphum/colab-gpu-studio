@@ -126,7 +126,7 @@ class Repository:
         try:
             return _GPU_MODELS[kind]
         except KeyError as exc:
-            raise ValueError(f"未知GPU实体类型: {kind}") from exc
+            raise ValueError(f"ไม่รู้จักประเภทเอนทิตี GPU (unknown GPU entity type): {kind}") from exc
 
     @staticmethod
     def _row(row):
@@ -158,7 +158,7 @@ class Repository:
     def create(self, kind, owner_id, data, project_id=None, record_id=None):
         model = self._model(kind)
         if not isinstance(data, Mapping):
-            raise ValueError("GPU记录data必须是对象")  # noqa: TRY004
+            raise ValueError("data ของระเบียน GPU ต้องเป็น object (dict)")  # noqa: TRY004
         payload = copy.deepcopy(dict(data))
         rid = record_id or str(uuid.uuid4())
         effective_project = project_id if project_id is not None else payload.get("project_id")
@@ -167,7 +167,7 @@ class Repository:
             workflow_key = payload.get("workflow_key")
             workflow_version = payload.get("workflow_version")
             if not isinstance(workflow_key, str) or not workflow_key:
-                raise ValueError("workflow_key必填")
+                raise ValueError("จำเป็นต้องระบุ workflow_key")
             if not (
                 (
                     isinstance(workflow_version, int)
@@ -176,7 +176,7 @@ class Repository:
                 )
                 or (isinstance(workflow_version, str) and workflow_version)
             ):
-                raise ValueError("workflow_version格式无效")
+                raise ValueError("รูปแบบ workflow_version ไม่ถูกต้อง")
         if kind == "files" and effective_project is None:
             storage_key = payload.get("storage_key")
             parts = storage_key.split("/") if isinstance(storage_key, str) else []
@@ -208,7 +208,7 @@ class Repository:
                 session.flush()
                 return self._row(row)
         except IntegrityError as exc:
-            raise ValueError("GPU记录已存在或违反唯一约束") from exc
+            raise ValueError("ระเบียน GPU มีอยู่แล้วหรือละเมิดข้อจำกัดความเป็นเอกลักษณ์ (unique / 唯一 / 存在)") from exc
 
     def get(self, kind, id, owner_id=None):
         model = self._model(kind)
@@ -231,7 +231,7 @@ class Repository:
     def update(self, kind, id, patch, owner_id=None):
         model = self._model(kind)
         if not isinstance(patch, Mapping):
-            raise ValueError("patch必须是对象")  # noqa: TRY004
+            raise ValueError("patch ต้องเป็น object (dict)")  # noqa: TRY004
         with self.store.db_lock(), self.store.Session.begin() as session:
             stmt = select(model).where(model.id == id)
             if owner_id is not None:
@@ -240,7 +240,7 @@ class Repository:
             if row is None:
                 raise KeyError(id)
             if kind == "workflows" and row.state == "published" and set(patch) - {"active"}:
-                raise ValueError("已发布workflow版本不可覆写")
+                raise ValueError("เวอร์ชันเวิร์กโฟลว์ที่เผยแพร่แล้วไม่สามารถเขียนทับได้")
             changes = copy.deepcopy(dict(patch))
             row.data = {**(row.data or {}), **changes}
             if "state" in changes:
@@ -250,7 +250,7 @@ class Repository:
             if kind == "workflows":
                 if "workflow_key" in changes:
                     if not isinstance(changes["workflow_key"], str) or not changes["workflow_key"]:
-                        raise ValueError("workflow_key格式无效")
+                        raise ValueError("รูปแบบ workflow_key ไม่ถูกต้อง")
                     row.workflow_key = changes["workflow_key"]
                 if "workflow_version" in changes:
                     value = changes["workflow_version"]
@@ -258,7 +258,7 @@ class Repository:
                         (isinstance(value, int) and not isinstance(value, bool) and value > 0)
                         or (isinstance(value, str) and value)
                     ):
-                        raise ValueError("workflow_version格式无效")
+                        raise ValueError("รูปแบบ workflow_version ไม่ถูกต้อง")
                     row.workflow_version = str(value)
             row.version += 1
             row.updated_at = utcnow()
@@ -267,9 +267,9 @@ class Repository:
 
     def create_job(self, owner_id, body, idempotency_key):
         if not isinstance(body, Mapping):
-            raise ValueError("job body必须是对象")  # noqa: TRY004
+            raise ValueError("job body ต้องเป็น object (dict)")  # noqa: TRY004
         if not isinstance(idempotency_key, str) or not idempotency_key:
-            raise ValueError("idempotency_key必填")
+            raise ValueError("จำเป็นต้องระบุ idempotency_key")
         raw = copy.deepcopy(dict(body))
         body_hash = digest(raw)
         for attempt in range(8):
@@ -282,7 +282,7 @@ class Repository:
                     )
                     if existing:
                         if existing.body_hash != body_hash:
-                            raise ValueError("同一owner的idempotency_key已用于不同body")
+                            raise ValueError("idempotency_key ของ owner เดียวกันถูกใช้กับ body อื่นไปแล้ว")
                         return self._row(existing), False
                     policy = raw.get("execution_policy") or {}
                     payload = {
@@ -322,13 +322,13 @@ class Repository:
                     return self._row(row), True
             except IntegrityError:
                 if attempt == 7:
-                    raise ValueError("GPU job创建竞争失败，请重试")
+                    raise ValueError("การแย่งชิงสร้าง GPU job ล้มเหลว กรุณาลองใหม่")
                 time.sleep(0.01 * (attempt + 1))
             except OperationalError as exc:
                 if "locked" not in str(exc).lower() or attempt == 7:
                     raise
                 time.sleep(0.02 * (attempt + 1))
-        raise RuntimeError("GPU job创建未完成")
+        raise RuntimeError("การสร้าง GPU job ยังไม่เสร็จสมบูรณ์")
 
     def event(self, job_id, owner_id, state, message, progress=None):
         job = self.get("jobs", job_id, owner_id)
@@ -337,7 +337,7 @@ class Repository:
         if progress is not None and (
             isinstance(progress, bool) or not isinstance(progress, (int, float)) or not 0 <= progress <= 1
         ):
-            raise ValueError("progress必须在0到1之间")
+            raise ValueError("progress ต้องอยู่ระหว่าง 0 ถึง 1")
         data = {"job_id": job_id, "message": message, "state": state}
         if progress is not None:
             data["progress"] = progress

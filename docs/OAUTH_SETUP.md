@@ -1,40 +1,40 @@
-# Google OAuth 与 Drive 配置指南
+# คู่มือการตั้งค่า Google OAuth และ Drive
 
-本项目不会内置任何人的 Google 账号或密钥。要想让后端替你去开 Colab GPU、读写 Google Drive 里的模型缓存，你需要用自己的 Google Cloud 项目创建一个 OAuth 客户端。
+โปรเจกต์นี้จะไม่มีการฝังบัญชีหรือคีย์ Google ของบุคคลใดไว้ล่วงหน้า เพื่อให้ระบบหลังบ้านสามารถขอเปิดใช้งาน Colab GPU รวมถึงอ่านและเขียนแคชโมเดลใน Google Drive แทนคุณได้ คุณจำเป็นต้องใช้โปรเจกต์ Google Cloud ของตนเองในการสร้าง OAuth Client
 
-## 第一步：在 Google Cloud 创建客户端 JSON
+## ขั้นตอนที่ 1: สร้าง Client JSON บน Google Cloud
 
-1. 打开 [Google Cloud Console](https://console.cloud.google.com/)，新建或选择一个个人项目。
-2. 在“API 和服务 → 库”里，搜索并启用 **Google Drive API**（如果你的账号列表里有 **Colaboratory API** 也一并启用）。
-3. 进入“Google Auth Platform / OAuth 同意屏幕”：
-   - 如果设为“测试（Testing）”模式，务必把你自己的 Google 邮箱加进 **测试用户（Test users）** 列表。
-   - 在数据访问权限（Scopes）里添加：
-     - `https://www.googleapis.com/auth/colaboratory`（用于申请和管理 Colab 运行时）
-     - `https://www.googleapis.com/auth/drive.file`（仅允许访问本应用在 Drive 里创建的缓存目录和作品，不会扫你网盘里的其他私人文件）
-4. 进入“客户端（Clients）”创建凭据，类型必须选 **Web 应用（Web application）**：
-   - **已获授权的 JavaScript 来源**：填你的网站地址，比如 `https://studio.example.com`（本地测试填 `http://127.0.0.1:8788`）
-   - **已获授权的重定向 URI**：必须精确填写 `https://studio.example.com/api/gpu/auth/google/callback`（把域名换成你实际配置的 `SITE_URL`）
-5. 创建好之后，点击下载客户端的 **JSON 文件**。
+1. เปิด [Google Cloud Console](https://console.cloud.google.com/) จากนั้นสร้างโปรเจกต์ใหม่หรือเลือกโปรเจกต์ส่วนตัวของคุณ
+2. ในส่วน "APIs & Services → Library" ค้นหาและเปิดใช้งาน **Google Drive API** (หากมี **Colaboratory API** ให้เปิดใช้งานด้วยเช่นกัน)
+3. ไปที่ "Google Auth Platform / OAuth consent screen":
+   - หากเลือกโหมด "ทดสอบ (Testing)" ต้องเพิ่มอีเมล Google ของคุณเข้าไปในรายชื่อ **Test users**
+   - ในส่วนขอบเขตสิทธิ์การเข้าถึงข้อมูล (Scopes) ให้เพิ่มรายการต่อไปนี้:
+     - `https://www.googleapis.com/auth/colaboratory` (ใช้สำหรับขอใช้งานและจัดการ Colab runtime)
+     - `https://www.googleapis.com/auth/drive.file` (อนุญาตให้เข้าถึงเฉพาะโฟลเดอร์แคชและผลงานที่แอปนี้สร้างขึ้นใน Drive เท่านั้น โดยจะไม่เข้าไปอ่านไฟล์ส่วนตัวอื่นๆ ใน Google Drive ของคุณ)
+4. ไปที่ "Credentials / Clients" เพื่อสร้างข้อมูลประจำตัว โดยประเภทต้องเลือกเป็น **Web application**:
+   - **Authorized JavaScript origins**: ระบุ URL ของเว็บไซต์คุณ เช่น `https://studio.example.com` (หากทดสอบในเครื่องให้ใช้ `http://127.0.0.1:8788`)
+   - **Authorized redirect URIs**: ต้องระบุให้ตรงเป๊ะเป็น `https://studio.example.com/api/gpu/auth/google/callback` (เปลี่ยนโดเมนให้ตรงกับ `SITE_URL` ที่คุณใช้งานจริง)
+5. เมื่อสร้างเสร็จเรียบร้อยแล้ว ให้คลิกดาวน์โหลด **ไฟล์ JSON** ของ Client เก็บไว้
 
-## 第二步：直接在网页上导入并连接（推荐）
+## ขั้นตอนที่ 2: นำเข้าและเชื่อมต่อบนหน้าเว็บโดยตรง (แนะนำ)
 
-不用连 SSH 改配置，直接在网页端就能绑好：
+ไม่จำเป็นต้องเชื่อมต่อ SSH เพื่อแก้ไขคอนฟิก สามารถตั้งค่าผ่านหน้าเว็บได้โดยตรง:
 
-1. 登录你的 Colab GPU Studio 网页 → 进入 **设置** 页面。
-2. 在 **Google OAuth 应用配置** 卡片里，上传刚才下载的客户端 JSON 文件，勾选确认并保存（Client Secret 会用 `.env` 里的 `ENCRYPTION_KEY` 加密存进数据库，前端不会回显）。
-3. 保存成功后，在下方分别点击 **连接 Google Colab** 和 **连接 Google Drive**，跳转到 Google 完成授权。
-4. 两个状态都变成“已连接”后，点一下 **检查可用 GPU**，就能看到你当前 Google 账号能用哪些显卡（比如 T4、L4、A100）了。
+1. เข้าสู่ระบบ Colab GPU Studio บนหน้าเว็บ → ไปที่หน้า **ตั้งค่า**
+2. ในการ์ด **การตั้งค่าแอป Google OAuth** ให้อัปโหลดไฟล์ Client JSON ที่เพิ่งดาวน์โหลดมา ติ๊กยืนยันแล้วกดบันทึก (Client Secret จะถูกเข้ารหัสด้วย `ENCRYPTION_KEY` จาก `.env` ก่อนบันทึกลงฐานข้อมูล และส่วนหน้าบ้านจะไม่แสดงคีย์นี้ออกมา)
+3. เมื่อบันทึกสำเร็จ ให้คลิกปุ่ม **เชื่อมต่อ Google Colab** และ **เชื่อมต่อ Google Drive** ด้านล่าง เพื่อไปยังหน้า Google และทำการยืนยันสิทธิ์
+4. เมื่อสถานะทั้งสองเปลี่ยนเป็น "เชื่อมต่อแล้ว" ให้คลิกปุ่ม **ตรวจสอบ GPU ที่พร้อมใช้** เพื่อดูว่าบัญชี Google ของคุณสามารถใช้การ์ดจอรุ่นใดได้บ้าง (เช่น T4, L4, A100)
 
-> **备用方式**：如果你不喜欢网页导入，也可以把 `GPU_GOOGLE_CLIENT_ID`、`GPU_GOOGLE_CLIENT_SECRET`、`GPU_GOOGLE_REDIRECT_URI` 直接填进服务器的 `.env` 文件里再重启容器。
+> **วิธีทางเลือก**: หากไม่ต้องการนำเข้าผ่านหน้าเว็บ คุณสามารถนำค่า `GPU_GOOGLE_CLIENT_ID`, `GPU_GOOGLE_CLIENT_SECRET`, `GPU_GOOGLE_REDIRECT_URI` ไปใส่ในไฟล์ `.env` บนเซิร์ฟเวอร์โดยตรง แล้วรีสตาร์ทคอนเทนเนอร์
 
-## 第三步：开启真实 GPU 开关与预算保护
+## ขั้นตอนที่ 3: เปิดสวิตช์ GPU จริงและระบบป้องกันงบประมาณ
 
-授权连上之后，默认还是不会开真 GPU 的。确认要开始跑图前，编辑服务器的 `.env`：
+หลังจากเชื่อมต่อและยืนยันสิทธิ์แล้ว ระบบจะยังคงปิดการใช้ GPU จริงไว้เป็นค่าเริ่มต้น ก่อนที่คุณจะเริ่มรันงานสร้างจริง ให้แก้ไขไฟล์ `.env` บนเซิร์ฟเวอร์:
 
 ```ini
 GPU_REAL_ENABLED=1
 GPU_STORAGE=drive
-# 填写每分钟消耗的 CU 估算值（例如 L4 约 0.027，T4 约 0.019），不填正数不允许跑真机
+# ระบุอัตราการใช้ CU โดยประมาณต่อนาที (เช่น L4 ประมาณ 0.027, T4 ประมาณ 0.019) หากไม่ใส่ค่าบวกจะไม่สามารถรันเครื่องจริงได้
 GPU_UNIT_RATE=0.027
 GPU_DAILY_UNITS=10
 GPU_MONTHLY_UNITS=100
@@ -42,4 +42,4 @@ GPU_MAX_JOB_UNITS=5
 GPU_MAX_RUNTIME_MINUTES=60
 ```
 
-改完重启服务，就可以去跑一次 CUDA 冒烟或激活内置工作流了。每次任务跑完，系统都会校验作品并自动删掉 Colab runtime。
+เมื่อแก้ไขแล้วให้รีสตาร์ทเซอร์วิส จากนั้นคุณสามารถรันการทดสอบ CUDA Smoke Test หรือเปิดใช้งานเวิร์กโฟลว์ในตัวได้ ทุกครั้งที่งานประมวลผลเสร็จสิ้น ระบบจะตรวจสอบผลงานและทำลาย Colab runtime ให้อัตโนมัติ

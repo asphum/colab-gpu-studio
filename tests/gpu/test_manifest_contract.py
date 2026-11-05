@@ -47,7 +47,7 @@ def test_validate_manifest_binds_only_real_object_info_inputs():
 
 
 def test_validate_manifest_rejects_unknown_node_and_connected_input():
-    with pytest.raises(ValueError, match="未知|unknown"):
+    with pytest.raises(ValueError, match="ไม่ทราบ|unknown|未知"):
         validate_manifest(
             {
                 **MANIFEST,
@@ -61,7 +61,7 @@ def test_validate_manifest_rejects_unknown_node_and_connected_input():
         )
     graph = copy.deepcopy(API_GRAPH)
     graph["1"]["inputs"]["image"] = ["2", 0]
-    with pytest.raises(ValueError, match="connected|连接"):
+    with pytest.raises(ValueError, match="connected|เชื่อมต่อ|连接"):
         validate_manifest(
             {
                 **MANIFEST,
@@ -79,11 +79,11 @@ def test_resolve_parameters_applies_preset_and_rejects_unknown_or_invalid_values
     resolved = resolve_parameters(MANIFEST, {"prompt": "world", "seed": -1}, {"steps": 30})
     assert resolved["prompt"] == "world" and resolved["steps"] == 30
     assert isinstance(resolved["seed"], int) and 0 <= resolved["seed"] <= 2**31 - 1
-    with pytest.raises(ValueError, match="未知|unknown"):
+    with pytest.raises(ValueError, match="ไม่ทราบ|unknown|未知"):
         resolve_parameters(MANIFEST, {"nope": 1})
-    with pytest.raises(ValueError, match="范围|range|类型|type"):
+    with pytest.raises(ValueError, match="ขอบเขต|range|ชนิด|type|范围|类型"):
         resolve_parameters(MANIFEST, {"steps": 99})
-    with pytest.raises(ValueError, match="类型|type"):
+    with pytest.raises(ValueError, match="ชนิด|type|类型"):
         resolve_parameters(MANIFEST, {"steps": "20"})
 
 
@@ -122,19 +122,19 @@ def test_validate_manifest_checks_every_node_and_link_type():
         "1": {"class_type": "DemoNode", "inputs": {"text": "hello", "steps": 20, "seed": 1}},
         "2": {"class_type": "MissingNode", "inputs": {}},
     }
-    with pytest.raises(ValueError, match="节点类型|未知"):
+    with pytest.raises(ValueError, match="ประเภทโหนด|unknown|node type|节点类型|未知"):
         validate_manifest(MANIFEST, graph, OBJECT_INFO)
 
     graph = copy.deepcopy(API_GRAPH)
     graph["1"]["inputs"]["image"] = ["404", 0]
-    with pytest.raises(ValueError, match="源节点|unknown|未知"):
+    with pytest.raises(ValueError, match="โหนดต้นทาง|source node|unknown|源节点|未知"):
         validate_manifest(MANIFEST, graph, OBJECT_INFO)
 
     graph = {
         "1": {"class_type": "DemoNode", "inputs": {"text": "hello", "steps": 20, "seed": 1}},
         "2": {"class_type": "DemoNode", "inputs": {"text": ["1", 0], "steps": 20, "seed": 1}},
     }
-    with pytest.raises(ValueError, match="类型|输出"):
+    with pytest.raises(ValueError, match="ชนิด|type|output|输出|类型"):
         validate_manifest(MANIFEST, graph, OBJECT_INFO)
 
 
@@ -143,9 +143,9 @@ def test_object_info_bounds_apply_when_manifest_omits_bounds_and_reject_nonfinit
     manifest["parameters"]["steps"].pop("min")
     manifest["parameters"]["steps"].pop("max")
     normalized = validate_manifest(manifest, API_GRAPH, OBJECT_INFO)
-    with pytest.raises(ValueError, match="范围"):
+    with pytest.raises(ValueError, match="ขอบเขต|range|范围"):
         resolve_parameters(normalized, {"steps": 0})
-    with pytest.raises(ValueError, match="有限|finite|类型"):
+    with pytest.raises(ValueError, match="จำกัด|finite|type|有限|类型"):
         resolve_parameters(normalized, {"prompt": "x", "steps": math.inf, "seed": 1})
 
 

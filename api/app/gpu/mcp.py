@@ -55,9 +55,9 @@ def _uuid4(value: str) -> str:
     try:
         parsed = uuid.UUID(value)
     except (ValueError, AttributeError, TypeError) as exc:
-        raise MCPError("execution_id必须是UUID4") from exc
+        raise MCPError("execution_id ต้องเป็น UUID4") from exc
     if parsed.version != 4:
-        raise MCPError("execution_id必须是UUID4")
+        raise MCPError("execution_id ต้องเป็น UUID4")
     return str(parsed)
 
 
@@ -75,7 +75,7 @@ def build_bootstrap_code(execution_id: str, payload: dict, worker_source: str | 
     """
     execution_id = _uuid4(execution_id)
     if not isinstance(payload, dict):
-        raise MCPError("worker payload必须是对象")
+        raise MCPError("worker payload ต้องเป็น object (dict)")
     if worker_source is None:
         worker_source = Path(__file__).with_name("runtime_worker.py").read_text(encoding="utf-8")
     if not isinstance(worker_source, str) or not worker_source:
@@ -194,7 +194,7 @@ class MCPGPUExecutor:
         timeout: float = 30.0,
     ):
         if store is None or not owner_id:
-            raise MCPError("MCPGPUExecutor需要Repository和owner_id")
+            raise MCPError("MCPGPUExecutor ต้องการ Repository และ owner_id")
         self.store = store
         self.owner_id = owner_id
         self.client = client or httpx.Client(timeout=httpx.Timeout(timeout), follow_redirects=False)
@@ -207,7 +207,7 @@ class MCPGPUExecutor:
             # not turn this adapter into an arbitrary outbound proxy.
             parsed = httpx.URL(self.endpoint)
             if parsed.scheme != "https" or not parsed.host:
-                raise MCPError("Colab MCP endpoint未验证")
+                raise MCPError("Endpoint ของ Colab MCP ยังไม่ได้รับการยืนยัน")
 
     @classmethod
     def from_environment(cls, store=None, owner_id=None, **kwargs):
@@ -231,17 +231,17 @@ class MCPGPUExecutor:
                 break
             except httpx.TransportError as exc:
                 if attempt == _NETWORK_ATTEMPTS - 1:
-                    raise MCPError(f"Colab MCP网络请求失败（{type(exc).__name__}，已重试{attempt}次）") from exc
+                    raise MCPError(f"คำขอเครือข่าย Colab MCP ล้มเหลว ({type(exc).__name__}，ลองใหม่ {attempt} ครั้ง)") from exc
                 time.sleep(2 * (attempt + 1))
             except httpx.HTTPError as exc:
-                raise MCPError(f"Colab MCP网络请求失败（{type(exc).__name__}）") from exc
+                raise MCPError(f"คำขอเครือข่าย Colab MCP ล้มเหลว ({type(exc).__name__}）") from exc
         if response.status_code < 200 or response.status_code >= 300:
-            raise MCPError(f"Colab MCP请求失败（HTTP {response.status_code}）")
+            raise MCPError(f"คำขอ Colab MCP ล้มเหลว (HTTP {response.status_code}）")
         envelope = self._parse_response(response)
         if not isinstance(envelope, dict):
-            raise MCPError("Colab MCP响应格式无效")
+            raise MCPError("รูปแบบการตอบกลับของ Colab MCP ไม่ถูกต้อง")
         if envelope.get("error"):
-            raise MCPError("Colab MCP工具调用失败")
+            raise MCPError("การเรียกใช้เครื่องมือ Colab MCP ล้มเหลว")
         return envelope.get("result")
 
     @staticmethod
@@ -251,10 +251,10 @@ class MCPGPUExecutor:
             try:
                 value = response.json()
             except (ValueError, json.JSONDecodeError) as exc:
-                raise MCPError("Colab MCP JSON响应无效") from exc
+                raise MCPError("การตอบกลับ JSON ของ Colab MCP ไม่ถูกต้อง") from exc
             if isinstance(value, dict):
                 return value
-            raise MCPError("Colab MCP JSON响应不是对象")
+            raise MCPError("การตอบกลับ JSON ของ Colab MCP ไม่ใช่ออบเจกต์")
         found = None
         for line in response.text.splitlines():
             if not line.startswith("data:"):
@@ -265,31 +265,31 @@ class MCPGPUExecutor:
             try:
                 candidate = json.loads(data)
             except json.JSONDecodeError as exc:
-                raise MCPError("Colab MCP SSE响应无效") from exc
+                raise MCPError("การตอบกลับ SSE ของ Colab MCP ไม่ถูกต้อง") from exc
             if isinstance(candidate, dict) and ("result" in candidate or "error" in candidate):
                 found = candidate
         if found is None:
-            raise MCPError("Colab MCP SSE响应为空")
+            raise MCPError("การตอบกลับ SSE ของ Colab MCP เป็นค่าว่าง")
         return found
 
     @staticmethod
     def _tool_value(result: Any) -> Any:
         if not isinstance(result, dict):
-            raise MCPError("Colab MCP工具返回无效结构")
+            raise MCPError("เครื่องมือ Colab MCP ส่งกลับโครงสร้างที่ไม่ถูกต้อง")
         if result.get("isError") or result.get("executionError"):
             detail = _error_detail(result)
             log.warning("Colab executor error: %s", detail)  # restricted backend log only
             name = (result.get("executionError") or {}).get("name") if isinstance(result.get("executionError"), dict) else None
             error = MCPTransient if _TRANSIENT.search(detail) else MCPError
-            raise error(f"Colab固定执行程序报错（{name or '工具错误'}），详见后台日志")
+            raise error(f"โปรแกรมรันของ Colab รายงานข้อผิดพลาด ({name or 'ข้อผิดพลาดของเครื่องมือ'}) ดูรายละเอียดในล็อกหลังบ้าน")
         if result.get("outputTruncated"):
-            raise MCPError("Colab文本传输被截断，结果未保存；请使用受控文件传输或降低产物大小")
+            raise MCPError("การส่งข้อความของ Colab ถูกตัดทอน ผลลัพธ์ไม่ถูกบันทึก; โปรดใช้การถ่ายโอนไฟล์หรือลดขนาดผลงาน")
         if isinstance(result.get("structuredContent"), dict):
             return MCPGPUExecutor._tool_value(result["structuredContent"])
         if "stdout" in result:
             text = result.get("stdout", "")
             if not isinstance(text, str):
-                raise MCPError("Colab stdout结构无效")
+                raise MCPError("โครงสร้าง stdout ของ Colab ไม่ถูกต้อง")
             for line in reversed(text.splitlines()):
                 try:
                     value = json.loads(line)
@@ -297,7 +297,7 @@ class MCPGPUExecutor:
                         return value
                 except json.JSONDecodeError:
                     continue
-            raise MCPError("固定执行程序没有返回完整JSON状态")
+            raise MCPError("โปรแกรมรันไม่ได้ส่งกลับสถานะ JSON ที่สมบูรณ์")
         if "content" in result:
             for item in result.get("content", []):
                 if (
@@ -309,7 +309,7 @@ class MCPGPUExecutor:
                         return MCPGPUExecutor._tool_value(json.loads(item["text"]))
                     except json.JSONDecodeError:
                         continue
-            raise MCPError("MCP工具没有返回可校验的JSON内容")
+            raise MCPError("เครื่องมือ MCP ไม่ได้ส่งกลับเนื้อหา JSON ที่สามารถตรวจสอบได้")
         return result
 
     def _tool(self, name: str, arguments: dict) -> Any:
@@ -323,12 +323,12 @@ class MCPGPUExecutor:
 
     def _session(self, handle: dict, job_id: str) -> str:
         if not isinstance(handle, dict) or handle.get("owner_id") != self.owner_id:
-            raise MCPError("拒绝使用不属于当前owner的Colab租约")
+            raise MCPError("ปฏิเสธการใช้สัญญาเช่า Colab ที่ไม่ได้เป็นของ owner ปัจจุบัน")
         parent = handle.get("runtime_name")
         if not isinstance(parent, str) or not _RUNTIME.fullmatch(parent):
-            raise MCPError("Colab runtime句柄未验证")
+            raise MCPError("Handle ของ Colab runtime ยังไม่ได้รับการยืนยัน")
         if not isinstance(job_id, str) or not _SAFE_ID.fullmatch(job_id):
-            raise MCPError("job id不适合作为稳定MCP sessionId")
+            raise MCPError("job id ไม่เหมาะสำหรับใช้เป็น MCP sessionId ที่เสถียร")
         session_id = "studio-" + hashlib.sha256(job_id.encode()).hexdigest()[:32]
         result = self._tool("create_session", {"parent": parent, "sessionId": session_id})
         session = next(
@@ -342,14 +342,14 @@ class MCPGPUExecutor:
             None,
         )
         if not session or not re.fullmatch(re.escape(parent) + r"/sessions/[a-z][a-z0-9-]{0,62}", session):
-            raise MCPError("Colab MCP create_session未返回合法完整session资源名")
+            raise MCPError("create_session ของ Colab MCP ไม่ได้ส่งกลับชื่อทรัพยากร session ที่ถูกต้องสมบูรณ์")
         return session
 
     @staticmethod
     def _payload(job: dict, execution_id: str, root: str) -> dict:
         snapshot = job.get("snapshot")
         if not isinstance(snapshot, dict):
-            raise MCPError("job缺少不可变snapshot")
+            raise MCPError("job ขาด snapshot ที่แก้ไขไม่ได้ (immutable snapshot)")
         # Explicit allow-list prevents credentials or arbitrary caller fields from
         # crossing into the remote runtime.
         payload = {
@@ -373,7 +373,7 @@ class MCPGPUExecutor:
     def start(self, handle: dict, job: dict, execution_id: str) -> dict:
         execution_id = _uuid4(execution_id)
         if not isinstance(job, dict) or not isinstance(job.get("id"), str):
-            raise MCPError("job无效")
+            raise MCPError("job ไม่ถูกต้อง")
         session = self._session(handle, job["id"])
         root = "/content/ai-studio/" + execution_id
         code = build_bootstrap_code(execution_id, self._payload(job, execution_id, root))
@@ -387,14 +387,14 @@ class MCPGPUExecutor:
 
     def poll(self, handle: dict, job: dict) -> dict:
         if not isinstance(job, dict) or not isinstance(job.get("id"), str):
-            raise MCPError("job无效")
+            raise MCPError("job ไม่ถูกต้อง")
         execution_id = _uuid4(job.get("execution_id"))
         session = self._session(handle, job["id"])
         probe_id = str(uuid.uuid4())
         code = build_poll_code(execution_id)
         result = self._tool("execute_code", {"session": session, "executionId": probe_id, "code": code})
         if not isinstance(result, dict):
-            raise MCPError("Colab状态响应无效")
+            raise MCPError("การตอบกลับสถานะของ Colab ไม่ถูกต้อง")
         state = result.get("state", "running")
         if state in {"reserved", "starting", "running", None}:
             stage = result.get("stage")
@@ -413,7 +413,7 @@ class MCPGPUExecutor:
                 "timings": result.get("timings") if isinstance(result.get("timings"), dict) else {},
             }
         if state != "completed":
-            raise MCPError("Colab状态值无效")
+            raise MCPError("ค่าสถานะของ Colab ไม่ถูกต้อง")
         outputs = []
         total = 0
         for item in result.get("outputs", []):
@@ -422,10 +422,10 @@ class MCPGPUExecutor:
             try:
                 content = base64.b64decode(item["content"], validate=True)
             except (ValueError, TypeError) as exc:
-                raise MCPError("Colab输出编码无效") from exc
+                raise MCPError("การเข้ารหัสผลลัพธ์ของ Colab ไม่ถูกต้อง") from exc
             total += len(content)
             if total > MAX_OUTPUT_BYTES:
-                raise MCPError("Colab输出超过100MB上限")
+                raise MCPError("ผลลัพธ์ของ Colab เกินขีดจำกัดสูงสุด 100MB")
             outputs.append(
                 {
                     "filename": str(item.get("filename", "output.bin")),

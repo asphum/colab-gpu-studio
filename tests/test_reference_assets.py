@@ -12,7 +12,7 @@ def test_reference_assets_survive_reload_and_exclude_mock(gpu_client):  # noqa: 
     response = client.post(
         "/api/assets",
         data={"project_id": project["id"]},
-        files={"file": ("参考图.png", raw.getvalue(), "image/png")},
+        files={"file": ("reference_image.png", raw.getvalue(), "image/png")},
     )
     assert response.status_code == 201, response.text
     asset = response.json()["data"]

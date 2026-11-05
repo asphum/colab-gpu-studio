@@ -34,26 +34,26 @@ def _environment_config() -> tuple[str, str]:
 
 def _parse(body: dict) -> tuple[str, str]:
     if not isinstance(body, dict) or body.get("confirmed") is not True:
-        raise APIError("CONFIRMATION_REQUIRED", "必须明确确认保存Google OAuth客户端配置", 403)
+        raise APIError("CONFIRMATION_REQUIRED", "ต้องยืนยันอย่างชัดเจนเพื่อบันทึกการตั้งค่า Google OAuth Client", 403)
     client_json = body.get("client_json")
     if client_json is not None:
         if not isinstance(client_json, dict) or "installed" in client_json or "web" not in client_json:
-            raise APIError("GOOGLE_CLIENT_INVALID", "仅支持Web类型Google OAuth客户端", 422)
+            raise APIError("GOOGLE_CLIENT_INVALID", "รองรับเฉพาะ Google OAuth Client ประเภท Web Application เท่านั้น", 422)
         # auth_uri/token_uri are intentionally ignored; endpoints are constants
         # in GoogleService and cannot be supplied by a client.
         web = client_json["web"]
         if not isinstance(web, dict):
-            raise APIError("GOOGLE_CLIENT_INVALID", "client_json.web必须是对象", 422)
+            raise APIError("GOOGLE_CLIENT_INVALID", "client_json.web ต้องเป็น object", 422)
         client_id, client_secret = web.get("client_id"), web.get("client_secret")
         redirects = web.get("redirect_uris")
         if not isinstance(redirects, list) or callback_uri() not in redirects:
-            raise APIError("GOOGLE_REDIRECT_MISMATCH", "redirect_uris必须包含服务端固定回调地址", 422)
+            raise APIError("GOOGLE_REDIRECT_MISMATCH", "redirect_uris ต้องมี Callback URL ของเซิร์ฟเวอร์", 422)
     else:
         client_id, client_secret = body.get("client_id"), body.get("client_secret")
     if not isinstance(client_id, str) or not _CLIENT_ID.fullmatch(client_id.strip()):
-        raise APIError("GOOGLE_CLIENT_INVALID", "client_id格式无效", 422)
+        raise APIError("GOOGLE_CLIENT_INVALID", "รูปแบบ client_id ไม่ถูกต้อง", 422)
     if not isinstance(client_secret, str) or not 8 <= len(client_secret) <= _MAX_SECRET:
-        raise APIError("GOOGLE_CLIENT_INVALID", "client_secret长度无效", 422)
+        raise APIError("GOOGLE_CLIENT_INVALID", "ความยาว client_secret ไม่ถูกต้อง", 422)
     return client_id.strip(), client_secret
 
 
@@ -94,7 +94,7 @@ def save_google_config(body: dict, request: Request, user=Depends(current_user),
     record_id = config_id(owner)
     with st.dispatch_lock() as acquired:
         if not acquired:
-            raise APIError("GOOGLE_CONFIG_BUSY", "Google OAuth配置正在保存，请稍后重试", 503, True)
+            raise APIError("GOOGLE_CONFIG_BUSY", "กำลังบันทึกการตั้งค่า Google OAuth กรุณาลองใหม่ในภายหลัง", 503, True)
         old = repo.get("credentials", record_id, owner)
         connected = [
             row
@@ -117,7 +117,7 @@ def save_google_config(body: dict, request: Request, user=Depends(current_user),
                 unchanged = False
             if not unchanged:
                 raise APIError(
-                    "GOOGLE_CONFIG_CONNECTED", "请先断开现有Colab或Drive连接后再更换Google客户端", 409
+                    "GOOGLE_CONFIG_CONNECTED", "กรุณายกเลิกการเชื่อมต่อ Colab หรือ Drive ที่มีอยู่ก่อนเปลี่ยน Google Client", 409
                 )
         data = {
             "provider": "google",

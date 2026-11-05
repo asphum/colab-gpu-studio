@@ -106,7 +106,7 @@ class Store:
         try:
             return MODELS[kind]
         except KeyError as exc:
-            raise ValueError(f"未知实体类型: {kind}") from exc
+            raise ValueError(f"ไม่ทราบประเภทเอนทิตี (unknown entity type): {kind}") from exc
 
     @staticmethod
     def _row(row):
@@ -130,7 +130,7 @@ class Store:
     def create(self, kind, owner_id, data, project_id=None, record_id=None):
         model = self._model(kind)
         if not isinstance(data, dict):
-            raise ValueError("data必须是对象")
+            raise ValueError("data ต้องเป็น object (dict)")
         payload = dict(data)
         row = model(
             id=record_id or uuid.uuid4().hex,
@@ -259,4 +259,4 @@ class Store:
                 finally:
                     fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
             return
-        raise RuntimeError(f"不支持的数据库调度锁方言: {self.engine.dialect.name}")
+        raise RuntimeError(f"ไม่รองรับ dialect สำหรับ database dispatch lock: {self.engine.dialect.name}")

@@ -17,8 +17,8 @@ H3_WORKFLOWS = {"minimax-h3-i2v", "minimax-h3-ref2v"}
 CURATED = [
     {
         "id": "anime-slider-ref2v",
-        "label": "2D 动漫/CG 风格锁定滑块（防偏 3D 真人）",
-        "note": "控制整体风格偏向 2D 动漫/CG 或写实，防止二次元 CG 参考图动起来变成 3D/真人感。无需触发词，推荐强度 1.0–3.0（默认 1.5）。",
+        "label": "แถบเลื่อนล็อกสไตล์ 2D อนิเมะ/CG (ป้องกันภาพกลายเป็น 3D หรือคนจริง)",
+        "note": "ควบคุมสไตล์โดยรวมให้เอนเอียงไปทาง 2D อนิเมะ/CG หรือภาพสมจริง ป้องกันไม่ให้ภาพอ้างอิงอนิเมะ CG กลายเป็น 3D/คนจริงเมื่อเคลื่อนไหว ไม่ต้องใช้ Trigger Word แนะนำความแรง 1.0–3.0 (ค่าเริ่มต้น 1.5)",
         "strength": 1.5,
         "workflows": ["minimax-h3-ref2v"],
         "url": "https://huggingface.co/RunningHubAI/rh-minmax-h3-2d-lora",
@@ -30,8 +30,8 @@ CURATED = [
     },
     {
         "id": "live-wallpaper-r64",
-        "label": "CG 动态壁纸 R64（运镜+微动）",
-        "note": "适合立绘/CG 微动（发丝、裙摆、光效、呼吸）且镜头听从提示词。提示词建议以 “live_wallpaper: Animate <Picture 1> with ...” 开头；推荐强度 0.8–1.0。",
+        "label": "วอลเปเปอร์เคลื่อนไหว CG R64 (มุมกล้อง + การเคลื่อนไหวละเอียด)",
+        "note": "เหมาะสำหรับภาพคอสตูม/CG ที่มีการเคลื่อนไหวเล็กน้อย (เส้นผม, ชายกระโปรง, แสง, การหายใจ) และมุมกล้องตามพรอมต์ แนะนำให้พรอมต์ขึ้นต้นด้วย “live_wallpaper: Animate <Picture 1> with ...”; แนะนำความแรง 0.8–1.0",
         "strength": 1.0,
         "workflows": ["minimax-h3-ref2v"],
         "url": "https://huggingface.co/Alissonerdx/Minimax-H3-ComfyUI",
@@ -43,8 +43,8 @@ CURATED = [
     },
     {
         "id": "live-wallpaper-r32",
-        "label": "CG 动态壁纸 R32（更保五官）",
-        "note": "适合单张或多张 CG 微动，五官还原更稳（镜头移动随机性稍高）。提示词建议以 “live_wallpaper: Animate <Picture 1> with ...” 开头；推荐强度 0.8–1.0。",
+        "label": "วอลเปเปอร์เคลื่อนไหว CG R32 (รักษาใบหน้าได้นิ่งกว่า)",
+        "note": "เหมาะสำหรับการเคลื่อนไหว CG ภาพเดี่ยวหรือหลายภาพ รักษาหน้าตาได้นิ่งกว่า แนะนำให้พรอมต์ขึ้นต้นด้วย “live_wallpaper: Animate <Picture 1> with ...”; แนะนำความแรง 0.8–1.0",
         "strength": 0.9,
         "workflows": ["minimax-h3-ref2v"],
         "url": "https://huggingface.co/Alissonerdx/Minimax-H3-ComfyUI",
@@ -56,8 +56,8 @@ CURATED = [
     },
     {
         "id": "anti-burn-v1",
-        "label": "Anti-Burn（多段续拍防脸崩/防发焦）",
-        "note": "用上一段视频尾帧续拍第 2、3、4 段时挂上，防止脸部和线条越来越锐化发焦。第一段不要挂！推荐强度 0.5。",
+        "label": "Anti-Burn (ป้องกันหน้าไหม้/เส้นแตกเมื่อต่อวิดีโอหลายตอน)",
+        "note": "ใช้เมื่อนำเฟรมสุดท้ายของวิดีโอก่อนหน้ามาต่อตอนที่ 2, 3, 4 เพื่อป้องกันไม่ให้ใบหน้าและเส้นสายคมจัดจนไหม้เกรียม ห้ามใส่ในตอนแรก! แนะนำความแรง 0.5",
         "strength": 0.5,
         "workflows": ["minimax-h3-i2v", "minimax-h3-ref2v"],
         "url": "https://huggingface.co/Imagineer13/H3-Anti-Burn-LoRA",
@@ -69,8 +69,8 @@ CURATED = [
     },
     {
         "id": "better-human-motion",
-        "label": "Better Human Motion（动作更自然）",
-        "note": "人物肢体动作更自然连贯。作者建议 0.4–0.8；提示词写短句，避免串词。训练于 T2V/I2V，二次元 CG 慎叠。",
+        "label": "Better Human Motion (การเคลื่อนไหวของมนุษย์ที่เป็นธรรมชาติยิ่งขึ้น)",
+        "note": "ท่าทางและสรีระของตัวละครต่อเนื่องและเป็นธรรมชาติยิ่งขึ้น ผู้สร้างแนะนำ 0.4–0.8 ควรเขียนพรอมต์สั้นกระชับ ภาพอนิเมะ CG ควรระวังการซ้อนทับ",
         "strength": 0.6,
         "workflows": ["minimax-h3-i2v", "minimax-h3-ref2v"],
         "url": "https://huggingface.co/vpakarinen/better-human-motion-h3-lora",
@@ -82,8 +82,8 @@ CURATED = [
     },
     {
         "id": "motion-repair-v2",
-        "label": "Motion Continuity Repair V2（防动作崩）",
-        "note": "修复转身、翻滚、跳跃等大动作的断裂和慢动作感；原片已经正常时效果不明显。作者建议单独用约 0.9，不要与其他动作 LoRA 混叠。",
+        "label": "Motion Continuity Repair V2 (ป้องกันการเคลื่อนไหวขาดตอน)",
+        "note": "ซ่อมแซมการเคลื่อนไหวใหญ่ เช่น หมุนตัว ตีลังกา กระโดด ไม่ให้ขาดตอนหรือช้าผิดปกติ แนะนำให้ใช้เดี่ยวๆ ที่ประมาณ 0.9 อย่าผสมกับ LoRA การเคลื่อนไหวตัวอื่น",
         "strength": 0.9,
         "workflows": ["minimax-h3-i2v", "minimax-h3-ref2v"],
         "url": "https://huggingface.co/JOKER141/MiniMax-H3-General-Motion-Continuity-Repair",
@@ -95,8 +95,8 @@ CURATED = [
     },
     {
         "id": "camera-motion",
-        "label": "Camera Motion（运镜）",
-        "note": "推近、拉远、环绕、手持跟拍等运镜。提示词必须以 “camera motion,” 开头；作者建议 0.8–1.0，超过 1.2 画面会不稳。",
+        "label": "Camera Motion (การควบคุมมุมกล้อง)",
+        "note": "มุมกล้องซูมเข้า ซูมออก แพนรอบ ทรงตัวแบบมือถือ พรอมต์ต้องขึ้นต้นด้วย “camera motion,” ผู้สร้างแนะนำ 0.8–1.0 หากเกิน 1.2 ภาพจะไม่นิ่ง",
         "strength": 0.8,
         "workflows": ["minimax-h3-i2v", "minimax-h3-ref2v"],
         "url": "https://huggingface.co/Jojocodex/minimax-h3-Camera-Motion-lora",
@@ -108,8 +108,8 @@ CURATED = [
     },
     {
         "id": "anime-motion",
-        "label": "Anime Motion（二次元小动作，仅图生视频）",
-        "note": "二次元风格的循环小动作：眨眼、表情、头发和背景轻动，会让大动作变弱。触发词 “Anime-Motion”；作者没给强度，先试 0.8。仅 I2V。",
+        "label": "Anime Motion (การเคลื่อนไหวสไตล์อนิเมะ เฉพาะแปลงภาพเป็นวิดีโอ)",
+        "note": "การเคลื่อนไหววนลูปสไตล์อนิเมะ: กะพริบตา สีหน้า เส้นผมและฉากหลังขยับเบาๆ จะทำให้ท่าทางใหญ่ลดลง Trigger Word “Anime-Motion” แนะนำเริ่มทดลองที่ 0.8 ใช้ได้เฉพาะ I2V",
         "strength": 0.8,
         "workflows": ["minimax-h3-i2v"],
         "url": "https://huggingface.co/prithivMLmods/MiniMax-H3-I2V-Anime-Motion-LoRA",

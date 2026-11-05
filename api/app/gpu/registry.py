@@ -69,7 +69,7 @@ class Registry:
         for row in self.workflows(owner_id):
             if row.get("workflow_key") == key and row.get("workflow_version") == version:
                 return row
-        raise KeyError(f"workflow {key}@{version}不存在")
+        raise KeyError(f"ไม่พบเวิร์กโฟลว์ (workflow not found / 不存在): {key}@{version}")
 
     @staticmethod
     def _template():
@@ -88,28 +88,28 @@ class Registry:
                 "enabled": True,
                 "is_mock": True,
                 "license_status": "not_applicable",
-                "description": "离线模拟用途；不生成真实AI媒体，不请求外网GPU。",
+                "description": "สำหรับการจำลองออฟไลน์ ไม่สร้างสื่อ AI จริง และไม่ขอใช้งาน GPU ภายนอก",
             },
             {
                 "model_id": "moss",
                 "name": "MOSS",
                 "enabled": False,
                 "is_mock": False,
-                "disabled_reason": "待核验模型权重、节点兼容性、许可与实际硬件；当前禁止真实运行。",
+                "disabled_reason": "รอตรวจสอบน้ำหนักโมเดล ความเข้ากันได้ของโหนด สัญญาอนุญาต และฮาร์ดแวร์จริง ปัจจุบันห้ามรันเครื่องจริง",
             },
             {
                 "model_id": "krea",
                 "name": "Krea",
                 "enabled": False,
                 "is_mock": False,
-                "disabled_reason": "待核验模型权重来源、许可、节点兼容性与账户/硬件条件；当前禁止真实运行。",
+                "disabled_reason": "รอตรวจสอบแหล่งที่มาของน้ำหนักโมเดล สัญญาอนุญาต ความเข้ากันได้ของโหนด และสิทธิ์บัญชี/ฮาร์ดแวร์ ปัจจุบันห้ามรันเครื่องจริง",
             },
             {
                 "model_id": "h3",
                 "name": "MiniMax H3",
                 "enabled": False,
                 "is_mock": False,
-                "disabled_reason": "待核验正式许可、权重/运行时与硬件验证；不以公开前端或示例冒充可运行模型。",
+                "disabled_reason": "รอตรวจสอบสัญญาอนุญาตอย่างเป็นทางการ น้ำหนัก/runtime และฮาร์ดแวร์จริง ไม่อ้างความพร้อมรันผ่านหน้าเว็บหรือตัวอย่าง",
             },
         ]
         for spec in model_specs:
@@ -141,7 +141,7 @@ class Registry:
                     "smoke_test_passed": True,
                     "smoke_test_kind": "mock",
                     "active": True,
-                    "description": "明确标识的离线模拟模板，仅用于演示。",
+                    "description": "เทมเพลตจำลองออฟไลน์ที่ระบุชัดเจน ใช้สำหรับการสาธิตเท่านั้น",
                 },
             )
         from .builtin import seed_builtin_templates
@@ -158,11 +158,11 @@ class Registry:
                 if acquired:
                     return self._bootstrap_locked(owner_id)
             time.sleep(0.005 * min(attempt + 1, 10))
-        raise RuntimeError("workflow bootstrap锁获取失败")
+        raise RuntimeError("การได้มาซึ่ง workflow bootstrap lock ล้มเหลว")
 
     def import_workflow(self, owner_id, bundle):
         if not isinstance(bundle, dict):
-            raise ValueError("workflow bundle必须是对象")  # noqa: TRY004
+            raise ValueError("workflow bundle ต้องเป็น object (dict)")  # noqa: TRY004
         source = bundle.get("workflow") if isinstance(bundle.get("workflow"), dict) else bundle
         key, model, manifest, graph, info = (
             source.get("workflow_key") or source.get("key"),
@@ -178,11 +178,11 @@ class Registry:
             and model
             and all(isinstance(x, dict) for x in (manifest, graph, info))
         ):
-            raise ValueError("workflow bundle缺少key/model/manifest/graph/object_info")
+            raise ValueError("workflow bundle ขาด key/model/manifest/graph/object_info")
         manifest_version = manifest.get("version")
         if manifest_version is not None:
             if not isinstance(manifest_version, str) or not _SEMVER.fullmatch(manifest_version):
-                raise ValueError("manifest.version必须是semver")
+                raise ValueError("manifest.version ต้องเป็น semver")
             version = manifest_version
         else:
             version = None
@@ -216,14 +216,14 @@ class Registry:
                 if "唯一" not in str(exc) and "存在" not in str(exc):
                     raise
                 time.sleep(0.005)
-        raise ValueError("workflow版本创建竞争失败，请重试")
+        raise ValueError("การแข่งขันสร้างเวอร์ชันเวิร์กโฟลว์ล้มเหลว กรุณาลองใหม่")
 
     def validate(self, owner_id, id):
         row = self.repo.get("workflows", id, owner_id)
         if row is None:
             raise KeyError(id)
         if row.get("state") == "published":
-            raise ValueError("已发布workflow版本不可重新验证或覆写")
+            raise ValueError("เวอร์ชันเวิร์กโฟลว์ที่เผยแพร่แล้วไม่สามารถตรวจสอบซ้ำหรือเขียนทับได้")
         manifest = validate_manifest(row["manifest"], row["api_graph"], row["object_info"])
         return self.repo.update(
             "workflows",
@@ -243,11 +243,11 @@ class Registry:
         if row is None:
             raise KeyError(id)
         if row.get("state") == "published":
-            raise ValueError("workflow版本已经发布且不可覆写")
+            raise ValueError("เวอร์ชันเวิร์กโฟลว์เผยแพร่ไปแล้วและไม่สามารถเขียนทับได้")
         if row.get("state") != "validated":
-            raise ValueError("workflow必须先通过validate")
+            raise ValueError("เวิร์กโฟลว์ต้องผ่านการ validate ก่อน")
         if not confirmed:
-            raise ValueError("发布必须明确confirmed")
+            raise ValueError("การเผยแพร่ต้องระบุ confirmed อย่างชัดเจน")
         # Re-check the immutable graph and manifest at the publication boundary;
         # a draft may have been edited after its previous validation.
         validate_manifest(row["manifest"], row["api_graph"], row["object_info"])
@@ -255,10 +255,10 @@ class Registry:
             (item for item in self.models(owner_id) if item.get("model_id") == row.get("model_id")), None
         )
         if not model or not model.get("enabled"):
-            raise ValueError("模型未启用，不能发布")
+            raise ValueError("โมเดลยังไม่เปิดใช้งาน ไม่สามารถเผยแพร่ได้ (模型未启用)")
         if model.get("is_mock"):
             if not row.get("smoke_test_passed") or row.get("smoke_test_kind") != "mock":
-                raise ValueError("demo mock必须先有成功的mock smoke证据")
+                raise ValueError("demo mock ต้องมีหลักฐาน mock smoke ที่สำเร็จก่อน")
         else:
             license_ok = bool(
                 model.get("license_approved")
@@ -266,18 +266,18 @@ class Registry:
                 or model.get("license_status") in {"approved", "verified", "valid", "ok"}
             )
             if not license_ok:
-                raise ValueError("真实workflow必须有许可审查证据")
+                raise ValueError("เวิร์กโฟลว์จริงต้องมีหลักฐานการตรวจสอบสัญญาอนุญาต (license / 许可)")
             if not (
                 row.get("smoke_test_passed")
                 and row.get("smoke_test_kind") == "real"
                 and row.get("review_approved")
             ):
-                raise ValueError("真实workflow必须有审查批准和真实smoke证据")
+                raise ValueError("เวิร์กโฟลว์จริงต้องได้รับการอนุมัติการตรวจสอบและมีหลักฐาน smoke จริง")
             classes = {
                 node.get("class_type") for node in row.get("api_graph", {}).values() if isinstance(node, dict)
             }
             if not classes.issubset(_PUBLISH_NODE_ALLOWLIST):
-                raise ValueError("真实workflow包含未通过固定allowlist审查的节点")
+                raise ValueError("เวิร์กโฟลว์จริงมีโหนดที่ไม่ผ่านการตรวจสอบ allowlist ที่กำหนด")
         for sibling in self.workflows(owner_id):
             if sibling.get("workflow_key") == row.get("workflow_key") and sibling.get("active"):
                 self.repo.update("workflows", sibling["id"], {"active": False}, owner_id)
@@ -286,7 +286,7 @@ class Registry:
     def rollback(self, owner_id, key, version):
         target = self.get_workflow(owner_id, key, version)
         if target.get("state") != "published":
-            raise ValueError("只能回滚到已发布版本")
+            raise ValueError("สามารถย้อนกลับได้เฉพาะเวอร์ชันที่เผยแพร่แล้วเท่านั้น")
         for sibling in self.workflows(owner_id):
             if sibling.get("workflow_key") == key and sibling.get("active"):
                 self.repo.update("workflows", sibling["id"], {"active": False}, owner_id)

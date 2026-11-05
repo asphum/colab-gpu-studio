@@ -58,7 +58,7 @@ class DriveStorage:
         self.store = store
         self.owner_id = owner_id or self.job.get("owner_id")
         if not self.store or not self.owner_id:
-            raise DriveError("DriveStorage需要Repository和owner_id")
+            raise DriveError("DriveStorage ต้องการ Repository และ owner_id")
         self.client = client or httpx.Client(timeout=httpx.Timeout(timeout), follow_redirects=False)
         self._owns_client = client is None
         self.google = google or GoogleService(store, self.owner_id, client=self.client)
@@ -94,7 +94,7 @@ class DriveStorage:
                 )
             except httpx.HTTPError as exc:
                 if not retryable or attempt + 1 >= self.max_retries:
-                    raise _DriveTransportError("Drive API网络请求失败") from exc
+                    raise _DriveTransportError("คำขอเครือข่าย Drive API ล้มเหลว") from exc
                 self.sleeper(min(2**attempt, 4))
                 continue
             if (
@@ -104,7 +104,7 @@ class DriveStorage:
             ):
                 return response
             self.sleeper(min(2**attempt, 4))
-        raise _DriveTransportError("Drive API请求失败")
+        raise _DriveTransportError("คำขอ Drive API ล้มเหลว")
 
     @staticmethod
     def _json(response: httpx.Response) -> dict:
@@ -114,11 +114,11 @@ class DriveStorage:
                 raise TypeError
             return value
         except (ValueError, TypeError):
-            raise DriveError("Drive API响应格式无效")
+            raise DriveError("รูปแบบการตอบกลับของ Drive API ไม่ถูกต้อง")
 
     def _ensure_ok(self, response: httpx.Response, action: str) -> dict:
         if response.status_code < 200 or response.status_code >= 300:
-            raise DriveError(f"Drive {action}失败（HTTP {response.status_code}）")
+            raise DriveError(f"Drive {action} ล้มเหลว (HTTP {response.status_code}）")
         return self._json(response)
 
     @staticmethod
@@ -132,7 +132,7 @@ class DriveStorage:
             self.base_url + "/files",
             params={"q": q, "pageSize": "10", "fields": "files(id,name,mimeType)"},
         )
-        payload = self._ensure_ok(response, "目录查询")
+        payload = self._ensure_ok(response, "ค้นหาไดเรกทอรี")
         files = payload.get("files") or []
         return files[0].get("id") if files and isinstance(files[0], dict) else None
 
@@ -155,11 +155,11 @@ class DriveStorage:
             existing = self._find_folder(name, parent) if response.status_code >= 500 else None
             if existing:
                 return existing
-            raise DriveError(f"Drive目录创建失败（HTTP {response.status_code}）")
+            raise DriveError(f"การสร้างไดเรกทอรี Drive ล้มเหลว (HTTP {response.status_code}）")
         payload = self._json(response)
         folder_id = payload.get("id")
         if not isinstance(folder_id, str) or not folder_id:
-            raise DriveError("Drive目录创建响应无效")
+            raise DriveError("การตอบกลับการสร้างไดเรกทอรี Drive ไม่ถูกต้อง")
         return folder_id
 
     def _repo_files(self) -> list[dict]:
@@ -208,7 +208,7 @@ class DriveStorage:
 
     def _normalize_key(self, key: str) -> str:
         if not isinstance(key, str) or not key or key.startswith("/") or "\\" in key:
-            raise DriveError("Drive key路径无效")
+            raise DriveError("เส้นทาง Drive key ไม่ถูกต้อง")
         normalized = posixpath.normpath(key)
         parts = normalized.split("/")
         if (
@@ -216,11 +216,11 @@ class DriveStorage:
             or normalized.startswith("../")
             or any(not part or part == ".." for part in parts)
         ):
-            raise DriveError("Drive key路径无效")
+            raise DriveError("เส้นทาง Drive key ไม่ถูกต้อง")
         if parts[0] not in _ALLOWED_ROOTS or len(parts) < 2:
-            raise DriveError("Drive业务目录无效")
+            raise DriveError("ไดเรกทอรีธุรกิจ Drive ไม่ถูกต้อง")
         if any(len(part) > 128 for part in parts):
-            raise DriveError("Drive key路径过长")
+            raise DriveError("เส้นทาง Drive key ยาวเกินไป")
         return normalized
 
     def _job_parent(self, key: str) -> str:
@@ -262,7 +262,7 @@ class DriveStorage:
             params={"q": q, "pageSize": "200", "orderBy": "modifiedTime desc",
                     "fields": "files(id,name,size,modifiedTime,md5Checksum)"},
         )
-        files = self._ensure_ok(response, "LoRA 列表").get("files") or []
+        files = self._ensure_ok(response, "รายการ LoRA").get("files") or []
         return [
             {"id": f["id"], "name": f["name"], "size": int(f.get("size") or 0),
              "modified_at": f.get("modifiedTime"), "md5": f.get("md5Checksum")}
@@ -280,7 +280,7 @@ class DriveStorage:
         )
         location = response.headers.get("location")
         if response.status_code >= 300 or not location:
-            raise DriveError(f"LoRA 上传会话创建失败（HTTP {response.status_code}）")
+            raise DriveError(f"การสร้างเซสชันอัปโหลด LoRA ล้มเหลว (HTTP {response.status_code}）")
         return location
 
     def _find_existing_file(self, name: str, parent: str, key_hash: str, sha256: str) -> dict | None:
@@ -293,7 +293,7 @@ class DriveStorage:
         response = self._request(
             "GET", self.base_url + "/files", params={"q": q, "pageSize": "10", "fields": fields}
         )
-        payload = self._ensure_ok(response, "文件查询")
+        payload = self._ensure_ok(response, "ค้นหาไฟล์")
         files = payload.get("files") or []
         for row in files:
             if not isinstance(row, dict):
@@ -354,12 +354,12 @@ class DriveStorage:
                 self.store.create("files", self.owner_id, data)
             except ValueError:
                 if not self._local_match(self._repo_files(), key_hash, sha256):
-                    raise DriveError("Drive本地持久化失败") from exc
+                    raise DriveError("การบันทึกข้อมูล Drive ลงในเครื่องล้มเหลว") from exc
             except (AttributeError, KeyError, TypeError) as nested:
-                raise DriveError("Drive本地持久化失败") from nested
+                raise DriveError("การบันทึกข้อมูล Drive ลงในเครื่องล้มเหลว") from nested
         except ValueError:
             if not self._local_match(self._repo_files(), key_hash, sha256):
-                raise DriveError("Drive本地持久化失败")
+                raise DriveError("การบันทึกข้อมูล Drive ลงในเครื่องล้มเหลว")
 
     def _multipart(self, metadata: dict, content: bytes, mime: str) -> tuple[bytes, str]:
         boundary = "atelier_" + uuid.uuid4().hex
@@ -393,7 +393,7 @@ class DriveStorage:
         }
         max_bytes = int(os.getenv("GPU_DRIVE_MAX_UPLOAD_BYTES", str(512 * 1024 * 1024)))
         if len(content) > max_bytes:
-            raise DriveError("Drive上传超过服务器限制")
+            raise DriveError("ขนาดอัปโหลด Drive เกินขีดจำกัดของเซิร์ฟเวอร์")
         if len(content) and (mime.startswith("video/") or len(content) > 8 * 1024 * 1024):
             return self._resumable(name, metadata, content, mime, parent, key_hash, sha256)
         body, content_type = self._multipart(metadata, content, mime)
@@ -416,7 +416,7 @@ class DriveStorage:
             )
             if existing:
                 return existing
-            raise DriveError(f"Drive文件上传失败（HTTP {response.status_code}）")
+            raise DriveError(f"การอัปโหลดไฟล์ Drive ล้มเหลว (HTTP {response.status_code}）")
         return self._json(response)
 
     @staticmethod
@@ -449,13 +449,13 @@ class DriveStorage:
         if response.status_code in (200, 201):
             return total, self._json(response)
         if response.status_code != 308:
-            raise DriveError(f"Drive可恢复上传状态查询失败（HTTP {response.status_code}）")
+            raise DriveError(f"การตรวจสอบสถานะ Drive Resumable Upload ล้มเหลว (HTTP {response.status_code}）")
         end = self._range_end(response)
         if end is None:
-            raise DriveError("Drive可恢复上传状态缺少范围")
+            raise DriveError("สถานะ Drive Resumable Upload ขาดช่วงข้อมูล (Range)")
         offset = end + 1
         if offset < 0 or offset > total:
-            raise DriveError("Drive可恢复上传状态范围无效")
+            raise DriveError("ช่วงข้อมูลของสถานะ Drive Resumable Upload ไม่ถูกต้อง")
         return offset, None
 
     def _resumable(
@@ -480,10 +480,10 @@ class DriveStorage:
             )
             if existing:
                 return existing
-            raise DriveError(f"Drive可恢复上传初始化失败（HTTP {response.status_code}）")
+            raise DriveError(f"การเริ่มต้น Drive Resumable Upload ล้มเหลว (HTTP {response.status_code}）")
         location = response.headers.get("location")
         if not location or not self._controlled_upload_location(location):
-            raise DriveError("Drive可恢复上传缺少受控会话地址")
+            raise DriveError("Drive Resumable Upload ขาด URL เซสชันที่ควบคุม (会话地址/session URI)")
         chunk = 8 * 1024 * 1024
         offset = 0
         while offset < len(content):
@@ -512,9 +512,9 @@ class DriveStorage:
                     continue
                 next_offset = received + 1
                 if next_offset < offset or next_offset > end + 1:
-                    raise DriveError("Drive可恢复上传308偏移无效")
+                    raise DriveError("Offset 308 ของ Drive Resumable Upload ไม่ถูกต้อง")
                 if next_offset == offset:
-                    raise DriveError("Drive可恢复上传308未推进")
+                    raise DriveError("Drive Resumable Upload 308 ไม่มีความคืบหน้า")
                 offset = next_offset
                 continue
             if response.status_code in _RETRYABLE_STATUSES:
@@ -522,13 +522,13 @@ class DriveStorage:
                 if result:
                     return result
                 continue
-            raise DriveError(f"Drive可恢复上传失败（HTTP {response.status_code}）")
-        raise DriveError("Drive可恢复上传未完成")
+            raise DriveError(f"Drive Resumable Upload ล้มเหลว (HTTP {response.status_code}）")
+        raise DriveError("Drive Resumable Upload ยังไม่เสร็จสมบูรณ์")
 
     def put(self, key: str, content: bytes, mime: str) -> dict:
         normalized = self._normalize_key(key)
         if not isinstance(content, (bytes, bytearray)) or not isinstance(mime, str) or not mime:
-            raise DriveError("Drive上传参数无效")
+            raise DriveError("พารามิเตอร์การอัปโหลด Drive ไม่ถูกต้อง")
         raw = bytes(content)
         sha256 = hashlib.sha256(raw).hexdigest()
         key_hash = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
@@ -555,7 +555,7 @@ class DriveStorage:
             "app_properties": record.get("appProperties") or {},
         }
         if not result["id"] or not self.verify(result, raw):
-            raise DriveError("Drive上传后校验失败")
+            raise DriveError("การตรวจสอบหลังอัปโหลด Drive ล้มเหลว")
         self._save_file_record(normalized, key_hash, sha256, mime, record, len(raw))
         result["verified"] = True
         return result

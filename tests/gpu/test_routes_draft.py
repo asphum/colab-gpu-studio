@@ -1,4 +1,4 @@
-"""Atelier 新旧任务契约隔离；测试只运行 Mock，不访问收费 GPU。"""
+"""Atelier contract isolation test; runs Mock only without accessing charged GPU."""
 
 import copy
 import time
@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 def gpu_client(tmp_path, monkeypatch):
     st = Store("sqlite:///" + str(tmp_path / "gpu-api.db"))
     user = st.create("users", "bootstrap", {"username": "gpu-admin", "role": "admin"})
-    project = st.create("projects", user["id"], {"title": "GPU验收项目"})
+    project = st.create("projects", user["id"], {"title": "โปรเจกต์ตรวจรับ GPU"})
     app.state.store = st
     monkeypatch.setattr(settings, "data_dir", tmp_path / "media")
     monkeypatch.setenv("GPU_REAL_ENABLED", "0")
@@ -41,7 +41,7 @@ def request_body(client, project):
         "model_id": w["model_id"],
         "workflow_key": w["workflow_key"],
         "workflow_version": w["workflow_version"],
-        "params": {"prompt": "明确标识为Mock的管线测试"},
+        "params": {"prompt": "การทดสอบไปป์ไลน์ที่ระบุชัดเจนว่าเป็น Mock"},
         "asset_ids": [],
         "execution_policy": {"provider": "mock", "shutdown_after_job": True, "max_runtime_minutes": 5},
     }

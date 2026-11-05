@@ -8,21 +8,17 @@
     "source": "https://huggingface.co/OpenMOSS-Team/MOSS-Image-SFT",
     "license": "Apache-2.0",
     "modality": "image",
-    "resource_profile": {
-      "disk_gb": 12.2,
-      "weights_gb": 13.0,
-      "min_vram_gb": 15
-    },
+    "resource_profile": "int8_convrot + w4a8_gptq (รันบน T4 ได้)",
     "variants": [
-      "int8_convrot + w4a8_gptq（T4 可跑）"
+      "int8_convrot + w4a8_gptq (รันบน T4 ได้)"
     ]
   },
   "manifest": {
     "workflow_key": "moss-image-sft-t2i",
     "model_id": "moss-image-sft",
     "version": "1.0.0",
-    "title": "MOSS-Image SFT 文生图",
-    "description": "OpenMOSS MOSS-Image SFT（int8），单张文生图；固定在 Colab T4 上运行。",
+    "title": "MOSS-Image SFT สร้างภาพจากข้อความ",
+    "description": "OpenMOSS MOSS-Image SFT (int8) สร้างภาพเดี่ยวจากข้อความ กำหนดรันบน Colab T4",
     "modality": "image",
     "executor": "comfyui",
     "compute_spec": {
@@ -34,8 +30,8 @@
     "parameters": {
       "prompt": {
         "type": "string",
-        "label": "提示词",
-        "description": "中文或英文均可；结构化长提示效果更好。",
+        "label": "พรอมต์ (Prompt)",
+        "description": "ใช้ภาษาไทยหรืออังกฤษก็ได้ พรอมต์ยาวแบบมีโครงสร้างจะให้ผลลัพธ์ดียิ่งขึ้น",
         "binding": {
           "node": "4",
           "input": "text"
@@ -45,8 +41,8 @@
       },
       "negative": {
         "type": "string",
-        "label": "不想要的内容",
-        "description": "留空即可。",
+        "label": "สิ่งที่ไม่ต้องการ (Negative Prompt)",
+        "description": "เว้นว่างไว้ได้",
         "binding": {
           "node": "5",
           "input": "text"
@@ -56,8 +52,8 @@
       },
       "width": {
         "type": "integer",
-        "label": "宽",
-        "description": "必须是 16 的倍数。",
+        "label": "ความกว้าง",
+        "description": "ต้องหารด้วย 16 ลงตัว",
         "binding": {
           "node": "6",
           "input": "width"
@@ -69,8 +65,8 @@
       },
       "height": {
         "type": "integer",
-        "label": "高",
-        "description": "必须是 16 的倍数。",
+        "label": "ความสูง",
+        "description": "ต้องหารด้วย 16 ลงตัว",
         "binding": {
           "node": "6",
           "input": "height"
@@ -82,8 +78,8 @@
       },
       "steps": {
         "type": "integer",
-        "label": "步数",
-        "description": "越多越慢，T4 上每步约几秒。",
+        "label": "จำนวนก้าว (Steps)",
+        "description": "ยิ่งมากยิ่งช้า บน T4 แต่ละก้าวใช้เวลาประมาณ 2-3 วินาที",
         "binding": {
           "node": "8",
           "input": "steps"
@@ -95,7 +91,7 @@
       },
       "cfg": {
         "type": "number",
-        "label": "提示词强度",
+        "label": "ความแรงพรอมต์ (CFG)",
         "description": "",
         "binding": {
           "node": "8",
@@ -109,7 +105,7 @@
       },
       "shift": {
         "type": "number",
-        "label": "采样偏移 shift",
+        "label": "ค่าชิฟต์การสุ่ม (Sampling Shift)",
         "description": "",
         "binding": {
           "node": "2",
@@ -123,8 +119,8 @@
       },
       "seed": {
         "type": "integer",
-        "label": "随机种子",
-        "description": "-1 表示每次随机。",
+        "label": "Seed สุ่ม",
+        "description": "-1 หมายถึงสุ่มใหม่ทุกครั้ง",
         "binding": {
           "node": "8",
           "input": "seed"

@@ -41,7 +41,7 @@ class ComfyClient:
     ):
         parsed = urlsplit(base_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
-            raise ComfyError("Comfy连接地址未验证")
+            raise ComfyError("ที่อยู่การเชื่อมต่อ Comfy ยังไม่ได้รับการยืนยัน (unverified Comfy URL)")
         self.base_url = urlunsplit((parsed.scheme, parsed.netloc, parsed.path.rstrip("/"), "", ""))
         self.token = token
         self.client = client or httpx.Client(timeout=httpx.Timeout(timeout), follow_redirects=False)
@@ -64,7 +64,7 @@ class ComfyClient:
             and not path.startswith("/history/")
             and not path.startswith("/view")
         ):
-            raise ComfyError("Comfy endpoint未被允许")
+            raise ComfyError("Endpoint ของ Comfy ไม่อยู่ในรายการที่อนุญาต")
         merged = {
             "Authorization": "Bearer " + self.token,
             "X-API-Key": self.token,
@@ -84,9 +84,9 @@ class ComfyClient:
                 data=data,
             )
         except httpx.HTTPError as exc:
-            raise ComfyError("Comfy连接失败") from exc
+            raise ComfyError("การเชื่อมต่อ Comfy ล้มเหลว") from exc
         if response.status_code >= 400:
-            raise ComfyError(f"Comfy请求失败（HTTP {response.status_code}）")
+            raise ComfyError(f"คำขอ Comfy ล้มเหลว (HTTP {response.status_code}）")
         return response
 
     def system_stats(self) -> dict:
@@ -110,7 +110,7 @@ class ComfyClient:
                 raise ValueError
             return prompt_id
         except (ValueError, TypeError, AttributeError):
-            raise ComfyError("Comfy队列响应无效")
+            raise ComfyError("การตอบกลับคิวของ Comfy ไม่ถูกต้อง")
 
     def history(self, prompt_id: str) -> dict:
         response = self._request("GET", "/history/" + prompt_id)
@@ -162,7 +162,7 @@ _result
 
 def _bootstrap_script(execution_id: str) -> str:
     if not _EXECUTION_ID.fullmatch(execution_id):
-        raise ComfyError("execution_id无效")
+        raise ComfyError("execution_id ไม่ถูกต้อง")
     return _FIXED_BOOTSTRAP.replace("__ATELIER_EXECUTION_ID__", repr(execution_id))
 
 
@@ -191,7 +191,7 @@ class _JupyterBootstrap:
                 },
             )
             if response.status_code < 200 or response.status_code >= 300:
-                raise ComfyError("Jupyter marker session创建失败")
+                raise ComfyError("การสร้าง Jupyter marker session ล้มเหลว")
             session = response.json()
             session_id = session["id"]
             kernel_id = session["kernel"]["id"]
@@ -233,16 +233,16 @@ class _JupyterBootstrap:
                     if message.get("parent_header", {}).get("msg_id") != msg_id:
                         continue
                     if message.get("msg_type") == "error":
-                        raise ComfyError("固定Jupyter bootstrap执行失败")
+                        raise ComfyError("การรัน Jupyter bootstrap ที่กำหนดไว้ล้มเหลว")
                     if message.get("msg_type") == "execute_reply":
                         if message.get("content", {}).get("status") != "ok":
-                            raise ComfyError("固定Jupyter bootstrap执行失败")
+                            raise ComfyError("การรัน Jupyter bootstrap ที่กำหนดไว้ล้มเหลว")
                         return
-            raise ComfyError("固定Jupyter bootstrap未确认")
+            raise ComfyError("Jupyter bootstrap ที่กำหนดไว้ยังไม่ได้รับการยืนยัน")
         except ComfyError:
             raise
         except Exception as exc:
-            raise ComfyError("Jupyter连接协议未证实，已拒绝执行") from exc
+            raise ComfyError("โปรโตคอลการเชื่อมต่อ Jupyter ยังไม่ได้รับการยืนยัน ปฏิเสธการทำงาน") from exc
         finally:
             if session_id:
                 try:
@@ -281,14 +281,14 @@ class ComfyGPUExecutor:
         manifest = snapshot.get("manifest") or {}
         graph = snapshot.get("bound_graph") or snapshot.get("api_graph")
         if not isinstance(manifest, dict) or not isinstance(graph, dict):
-            raise ComfyError("工作流快照缺少已审查Comfy图")
+            raise ComfyError("ภาพรวมของเวิร์กโฟลว์ขาด Comfy Graph ที่ผ่านการตรวจสอบ (审查/reviewed)")
         if manifest.get("state") != "published" or manifest.get("reviewed") is not True:
-            raise ComfyError("工作流尚未通过发布审查")
+            raise ComfyError("เวิร์กโฟลว์ยังไม่ผ่านการตรวจสอบก่อนเผยแพร่ (审查/reviewed)")
         if not isinstance(manifest.get("comfy_version"), str) or not manifest.get("comfy_version"):
-            raise ComfyError("工作流缺少固定Comfy版本")
+            raise ComfyError("เวิร์กโฟลว์ขาดเวอร์ชัน Comfy ที่กำหนดตายตัว")
         allowlist = manifest.get("node_allowlist")
         if not isinstance(allowlist, list) or not allowlist or any(not isinstance(x, str) for x in allowlist):
-            raise ComfyError("工作流缺少节点allowlist")
+            raise ComfyError("เวิร์กโฟลว์ขาด allowlist ของโหนด")
         weights = manifest.get("weights")
         if not isinstance(weights, list) or any(
             not isinstance(w, dict)
@@ -296,47 +296,47 @@ class ComfyGPUExecutor:
             or not re.fullmatch(r"[0-9a-fA-F]{64}", str(w.get("sha256", "")))
             for w in weights
         ):
-            raise ComfyError("工作流权重revision或sha256未锁定")
+            raise ComfyError("revision หรือ sha256 ของน้ำหนักโมเดลในเวิร์กโฟลว์ยังไม่ได้ล็อก")
         for node in graph.values():
             if not isinstance(node, dict) or node.get("class_type") not in allowlist:
-                raise ComfyError("工作流包含未允许的Comfy节点")
+                raise ComfyError("เวิร์กโฟลว์มีโหนด Comfy ที่ไม่อยู่ในรายการอนุญาต")
         return manifest, graph
 
     def _connection(self, handle: dict) -> tuple[str, str, str | None]:
         if not isinstance(handle, dict):
-            raise ComfyError("Colab连接句柄无效")
+            raise ComfyError("Handle การเชื่อมต่อ Colab ไม่ถูกต้อง")
         url = handle.get("comfy_url") or handle.get("connection_url") or self.base_url
         token = handle.get("connection_token") or handle.get("token") or self.token
         jupyter_url = handle.get("jupyter_url")
         if not isinstance(url, str) or not isinstance(token, str) or not token:
-            raise ComfyError("未取得经过验证的Colab connectionInfo，已拒绝执行")
+            raise ComfyError("ไม่ได้รับ connectionInfo ของ Colab ที่ผ่านการตรวจสอบแล้ว ปฏิเสธการทำงาน")
         parsed = urlsplit(url)
         if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
-            raise ComfyError("Colab连接协议未验证，已拒绝执行")
+            raise ComfyError("โปรโตคอลการเชื่อมต่อ Colab ยังไม่ได้รับการตรวจสอบ ปฏิเสธการทำงาน")
         return url, token, jupyter_url
 
     def start(self, handle: dict, job: dict, execution_id: str) -> dict:
         if not _EXECUTION_ID.fullmatch(execution_id):
-            raise ComfyError("execution_id无效")
+            raise ComfyError("execution_id ไม่ถูกต้อง")
         if execution_id in self._executions:
             return {"execution_id": execution_id, "idempotent": True}
         url, token, jupyter_url = self._connection(handle)
         manifest, graph = self._manifest(job)
         if self.expected_comfy_version and manifest["comfy_version"] != self.expected_comfy_version:
-            raise ComfyError("Comfy版本与发布审查不匹配")
+            raise ComfyError("เวอร์ชันของ Comfy ไม่ตรงกับการตรวจสอบก่อนเผยแพร่ (审查/reviewed)")
         comfy = ComfyClient(url, token, client=self.client)
         # The marker is mandatory. Without a verified Jupyter connection there
         # is no safe way to create the required /content/ai-studio lock file.
         if not isinstance(jupyter_url, str) or not jupyter_url:
             comfy.close()
-            raise ComfyError("未提供Jupyter connectionInfo，无法建立执行锁")
+            raise ComfyError("ไม่ได้ระบุ Jupyter connectionInfo ไม่สามารถสร้าง Execution Lock ได้")
         try:
             stats = comfy.system_stats()
             system = stats.get("system") if isinstance(stats.get("system"), dict) else stats
             runtime_version = system.get("comfyui_version") or system.get("comfy_version")
             if runtime_version != manifest["comfy_version"]:
                 comfy.close()
-                raise ComfyError("运行时Comfy版本未通过固定版本校验")
+                raise ComfyError("เวอร์ชัน Comfy ใน runtime ไม่ผ่านการตรวจสอบเวอร์ชันที่ล็อกไว้")
             _JupyterBootstrap(jupyter_url, token, client=self.client).run(execution_id)
             prompt_id = comfy.queue(graph, execution_id)
         except ComfyError:
@@ -354,7 +354,7 @@ class ComfyGPUExecutor:
         execution_id = job.get("execution_id")
         state = self._executions.get(execution_id)
         if not state:
-            raise ComfyError("执行状态不可恢复，拒绝重复推理")
+            raise ComfyError("สถานะการทำงานไม่สามารถกู้คืนได้ ปฏิเสธการรันซ้ำ")
         history = state["client"].history(state["prompt_id"])
         item = history.get(state["prompt_id"]) if isinstance(history, dict) else None
         if not isinstance(item, dict):
@@ -369,7 +369,7 @@ class ComfyGPUExecutor:
                 "state": "failed",
                 "outputs": [],
                 "error_code": "comfy_execution_failed",
-                "message": "Comfy工作流执行失败",
+                "message": "การรันเวิร์กโฟลว์ Comfy ล้มเหลว",
             }
         outputs = []
         for node in (item.get("outputs") or {}).values():

@@ -15,7 +15,7 @@ def main():
     a = p.parse_args()
     path = Path(a.output)
     if path.exists():
-        raise SystemExit("配置已存在；为保护凭据不会覆盖。")
+        raise SystemExit("ไฟล์คอนฟิกมีอยู่แล้ว; เพื่อปกป้องข้อมูลประจำตัวจะไม่เขียนทับ")
     values = {
         "ENVIRONMENT": "development",
         "SITE_URL": a.site_url.rstrip("/"),
@@ -42,7 +42,7 @@ def main():
     fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     with os.fdopen(fd, "w") as f:
         f.write("\n".join(k + "=" + v for k, v in values.items()) + "\n")
-    print("已创建私密配置：" + str(path) + "；密码在文件内，不在日志回显。真实GPU默认关闭。")
+    print("สร้างไฟล์คอนฟิกส่วนตัวเรียบร้อยแล้ว: " + str(path) + " รหัสผ่านอยู่ในไฟล์และจะไม่แสดงในล็อก GPU จริงถูกปิดไว้เป็นค่าเริ่มต้น")
 
 
 if __name__ == "__main__":

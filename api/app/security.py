@@ -13,13 +13,13 @@ from .config import settings
 
 def _fernet():
     if not settings.encryption_key:
-        raise RuntimeError("必须配置 ENCRYPTION_KEY；请运行 scripts/init_env.py")
+        raise RuntimeError("ต้องกำหนดค่า ENCRYPTION_KEY ก่อน; โปรดรัน scripts/init_env.py")
     return Fernet(settings.encryption_key.encode())
 
 
 def encrypt_secret(value: str) -> str:
     if not isinstance(value, str) or not value:
-        raise ValueError("secret不能为空")
+        raise ValueError("secret ต้องไม่เป็นค่าว่าง")
     return _fernet().encrypt(value.encode()).decode()
 
 
@@ -27,7 +27,7 @@ def decrypt_secret(value: str) -> str:
     try:
         return _fernet().decrypt(value.encode()).decode()
     except (InvalidToken, TypeError, ValueError) as exc:
-        raise ValueError("无法解密凭据") from exc
+        raise ValueError("ไม่สามารถถอดรหัสข้อมูลประจำตัวได้ (unable to decrypt credentials)") from exc
 
 
 def redact(value):
@@ -53,7 +53,7 @@ def hash_request(value):
 
 def sign_session(payload):
     if not settings.session_secret:
-        raise RuntimeError("SESSION_SECRET未配置")
+        raise RuntimeError("ยังไม่ได้กำหนดค่า SESSION_SECRET")
     raw = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode().rstrip("=")
     sig = hmac.new(settings.session_secret.encode(), raw.encode(), hashlib.sha256).hexdigest()
     return raw + "." + sig

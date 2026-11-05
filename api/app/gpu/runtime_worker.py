@@ -594,13 +594,13 @@ def _check_loras(graph: dict, manifest: dict, user_files: list[dict]) -> None:
         if isinstance(node, dict) and node.get("class_type") == "LoraLoaderModelOnly":
             name = node.get("inputs", {}).get("lora_name")
             if str(name).startswith(("curated/", "user/")) and name not in have:
-                raise WorkerError(f"LoRA 文件没有随任务下发：{name}")
+                raise WorkerError(f"ไฟล์ LoRA ไม่ได้ถูกส่งมาพร้อมกับงาน: {name}")
 
 
 def _restore_user_loras(comfy: Path, files: list[dict], cache: DriveCache | None) -> None:
     """The owner's own LoRAs from Drive (``loras/h3``) into models/loras/user/."""
     if cache is None:
-        raise WorkerError("自定义 LoRA 需要 Drive 存储")
+        raise WorkerError("Custom LoRA จำเป็นต้องใช้พื้นที่จัดเก็บ Drive")
     loras = (comfy / "models" / "loras").resolve()
     for item in files:
         target = (loras / item["target"]).resolve()

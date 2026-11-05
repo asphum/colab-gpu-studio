@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 if [ ! -f .env ]; then
-  printf '%s\n' '请先执行 uv run python scripts/init_env.py --site-url https://你的域名'
+  printf '%s\n' 'กรุณารันคำสั่ง uv run python scripts/init_env.py --site-url https://โดเมนของคุณ ก่อน'
   exit 1
 fi
 docker compose config -q

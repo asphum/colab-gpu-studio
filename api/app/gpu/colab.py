@@ -45,7 +45,7 @@ class GoogleColabProvider:
     @classmethod
     def from_environment(cls, store=None, owner_id=None, **kwargs):
         if store is None or not owner_id:
-            raise ColabError("Colab 需要已认证用户及持久化 Repository")
+            raise ColabError("Colab ต้องการผู้ใช้ที่ผ่านการยืนยันตัวตนแล้วและ Repository ที่คงทน")
         return cls(store, owner_id, **kwargs)
 
     def _request(self, method, path, *, params=None, json=None):
@@ -59,9 +59,9 @@ class GoogleColabProvider:
                 headers={"Authorization": "Bearer " + token, "Accept": "application/json"},
             )
         except httpx.HTTPError as exc:
-            raise ColabError("Colab API 网络异常，远端结果可能未知，将保留租约进行协调") from exc
+            raise ColabError("ข้อผิดพลาดเครือข่ายของ Colab API ผลลัพธ์ปลายทางอาจไม่ทราบ จะคงสัญญาเช่าไว้เพื่อประสานข้อมูล") from exc
         if response.status_code >= 400 and response.status_code != 404:
-            raise ColabError(f"Colab API 请求失败（HTTP {response.status_code}）")
+            raise ColabError(f"คำขอ Colab API ล้มเหลว (HTTP {response.status_code}）")
         return response
 
     @staticmethod
@@ -72,7 +72,7 @@ class GoogleColabProvider:
                 raise ValueError()
             return payload
         except ValueError as exc:
-            raise ColabError("Colab API 返回无效 JSON") from exc
+            raise ColabError("Colab API ส่งกลับ JSON ที่ไม่ถูกต้อง") from exc
 
     def list_specs(self):
         return self._json(self._request("GET", "/v1beta/runtimespecs")).get("runtimeSpecs", [])
@@ -103,15 +103,15 @@ class GoogleColabProvider:
             if lease.get("provider", "colab") != "colab":
                 continue
             return lease
-        raise ColabError("拒绝操作未登记归属的 runtime；不会触碰用户手动运行时")
+        raise ColabError("ปฏิเสธการดำเนินการกับ runtime ที่ไม่ได้ลงทะเบียนความเป็นเจ้าของ (归属/ownership); จะไม่แตะต้อง runtime ที่ผู้ใช้สร้างเอง")
 
     def _owned(self, handle):
         if not isinstance(handle, dict) or handle.get("owner_id") != self.owner_id:
-            raise ColabError("Colab 租约归属无效")
+            raise ColabError("สัญญาเช่า Colab ความเป็นเจ้าของ (归属/ownership) ไม่ถูกต้อง")
         runtime = handle.get("runtime_name", "")
         match = _RUNTIME.fullmatch(runtime)
         if not match or handle.get("runtime_id") != match.group(1):
-            raise ColabError("Colab runtime 句柄无效")
+            raise ColabError("Handle ของ Colab runtime ไม่ถูกต้อง")
         return self._lease(
             match.group(1), handle.get("request_id"), handle.get("owner_job_id") or handle.get("job_id")
         )
@@ -119,15 +119,15 @@ class GoogleColabProvider:
     @staticmethod
     def _spec(spec):
         if not isinstance(spec, dict):
-            raise ColabError("runtimeSpec 必须来自当前账户真实可用规格的 key")
+            raise ColabError("runtimeSpec ต้องมาจาก key สเปกที่ใช้งานได้จริงของบัญชีปัจจุบัน")
         if "key" in spec:
             if spec.get("eligible") is not True:
-                raise ColabError("runtimeSpec 必须明确标记 eligible=true")
+                raise ColabError("runtimeSpec ต้องระบุ eligible=true อย่างชัดเจน")
             key = spec["key"]
         else:
             key = spec
         if not isinstance(key, dict):
-            raise ColabError("runtimeSpec 必须来自当前账户真实可用规格的 key")
+            raise ColabError("runtimeSpec ต้องมาจาก key สเปกที่ใช้งานได้จริงของบัญชีปัจจุบัน")
         key = dict(key)
         key["variant"] = _VARIANT_ALIASES.get(key.get("variant"), key.get("variant"))
         key["shape"] = _SHAPE_ALIASES.get(key.get("shape"), key.get("shape"))
@@ -136,9 +136,9 @@ class GoogleColabProvider:
             or key.get("variant") not in _VARIANTS
             or key.get("shape") not in _SHAPES
         ):
-            raise ColabError("runtimeSpec 必须来自当前账户真实可用规格的 key")
+            raise ColabError("runtimeSpec ต้องมาจาก key สเปกที่ใช้งานได้จริงของบัญชีปัจจุบัน")
         if not isinstance(key.get("accelerator"), str) or not key["accelerator"]:
-            raise ColabError("runtimeSpec accelerator 无效")
+            raise ColabError("accelerator ของ runtimeSpec ไม่ถูกต้อง")
         return dict(key)
 
     @staticmethod
@@ -146,17 +146,17 @@ class GoogleColabProvider:
         if operation.get("error"):
             code = (operation["error"] or {}).get("code", "unknown")
             # Google's detail may contain credentials or notebook data: expose only safe code.
-            raise ColabError(f"Colab 分配 Operation 失败（code {code}），请检查资格、配额与库存")
+            raise ColabError(f"การจัดสรร Operation ของ Colab ล้มเหลว (code {code}) โปรดตรวจสอบสิทธิ์ โควตา และสต็อกการ์ดจอ")
 
     def create(self, spec, request_id, job_id, runtime_id):
         if not isinstance(runtime_id, str) or not _RUNTIME_ID.fullmatch(runtime_id):
-            raise ColabError("runtimeId 必须是字母开头的 RFC1034 标识")
+            raise ColabError("runtimeId ต้องเป็น RFC1034 identifier ที่ขึ้นต้นด้วยตัวอักษร")
         try:
             request_uuid = uuid.UUID(request_id)
         except (TypeError, ValueError, AttributeError) as exc:
-            raise ColabError("Colab requestId 必须是 UUID4") from exc
+            raise ColabError("requestId ของ Colab ต้องเป็น UUID4") from exc
         if request_uuid.version != 4:
-            raise ColabError("Colab requestId 必须是 UUID4")
+            raise ColabError("requestId ของ Colab ต้องเป็น UUID4")
         lease = self._lease(runtime_id, request_id, job_id)
         key = self._spec(spec)
         response = self._request(
@@ -168,7 +168,7 @@ class GoogleColabProvider:
         operation = self._json(response)
         name = operation.get("name")
         if not isinstance(name, str) or not _OPERATION.fullmatch(name):
-            raise ColabError("创建响应缺少合法 Operation，保留既定 runtimeId 待协调")
+            raise ColabError("การตอบกลับการสร้างขาด Operation ที่ถูกต้อง โดยจะคง runtimeId ไว้เพื่อรอประสานข้อมูล")
         self.store.update(
             "leases",
             lease["id"],
@@ -190,7 +190,7 @@ class GoogleColabProvider:
         if not name:
             return None
         if not _OPERATION.fullmatch(name):
-            raise ColabError("Operation 名称无效")
+            raise ColabError("ชื่อ Operation ไม่ถูกต้อง")
         response = self._request("GET", "/v1/" + name)
         if response.status_code == 404:
             # Missing operation is not proof of runtime deletion; inspect runtime below.
@@ -227,7 +227,7 @@ class GoogleColabProvider:
         response = self._request("GET", "/v1beta/" + handle["runtime_name"])
         info = self._json(response).get("connectionInfo", {})
         if not info.get("url") or not info.get("token"):
-            raise ColabError("Colab connectionInfo 未就绪")
+            raise ColabError("connectionInfo ของ Colab ยังไม่พร้อมใช้งาน")
         return {"url": info["url"], "token": info["token"], "expire_time": info.get("expireTime")}
 
     def delete(self, handle):

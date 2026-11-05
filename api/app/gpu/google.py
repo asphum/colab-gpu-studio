@@ -98,7 +98,7 @@ class GoogleService:
         try:
             secret = decrypt_secret(row["encrypted_client_secret"])
         except (KeyError, TypeError, ValueError) as exc:
-            raise GoogleConfigurationError("Google OAuth配置不可用") from exc
+            raise GoogleConfigurationError("การตั้งค่า Google OAuth ไม่สามารถใช้งานได้") from exc
         return {"client_id": str(row.get("client_id", "")).strip(), "client_secret": secret, "id": row.get("id")}
 
     def _config(self, owner_id: str | None = None) -> tuple[str, str, str]:
@@ -112,12 +112,12 @@ class GoogleService:
             ).strip()
         redirect = self.callback_uri()
         if not client_id or not client_secret or not redirect:
-            raise GoogleConfigurationError("Google OAuth未配置，真实GPU能力已关闭")
+            raise GoogleConfigurationError("ยังไม่ได้ตั้งค่า Google OAuth ความสามารถ GPU จริงจึงถูกปิดไว้")
         if not redirect.startswith("https://") and str(getattr(settings, "environment", "development")).lower() in {
             "prod",
             "production",
         }:
-            raise GoogleConfigurationError("生产环境Google OAuth回调必须使用HTTPS")
+            raise GoogleConfigurationError("Callback ของ Google OAuth ใน Production ต้องใช้ HTTPS")
         return client_id, client_secret, redirect
 
     def _list(self, kind: str, owner_id: str | None = None) -> list[dict]:
@@ -164,7 +164,7 @@ class GoogleService:
                 "expires_at": credential.get("expires_at") if credential else None,
             }
             if credential and not scope_ok:
-                result[purpose]["message"] = "Google权限不足，请重新授权"
+                result[purpose]["message"] = "สิทธิ์ของ Google ไม่เพียงพอ กรุณายืนยันสิทธิ์ใหม่อีกครั้ง"
         return result
 
     @staticmethod
@@ -195,9 +195,9 @@ class GoogleService:
 
     def start(self, purpose: str) -> dict:
         if purpose not in _PURPOSES:
-            raise ValueError("Google OAuth purpose无效")
+            raise ValueError("purpose ของ Google OAuth ไม่ถูกต้อง")
         if not self.owner_id:
-            raise GoogleOAuthError("当前登录用户无效")
+            raise GoogleOAuthError("ผู้ใช้ที่เข้าสู่ระบบปัจจุบันไม่ถูกต้อง")
         client_id, _secret, redirect = self._config()
         state = secrets.token_urlsafe(32)
         verifier = secrets.token_urlsafe(64)
@@ -232,7 +232,7 @@ class GoogleService:
 
     def _take_state(self, state: str) -> dict:
         if not isinstance(state, str) or not state or len(state) > 512:
-            raise GoogleOAuthError("OAuth state无效或已过期")
+            raise GoogleOAuthError("OAuth state ไม่ถูกต้องหรือหมดอายุแล้ว")
         # Lock only the read-and-consume transition.  The network token
         # exchange happens after this context is released.
         with self._state_consume_guard():
@@ -242,10 +242,10 @@ class GoogleService:
                 if r.get("purpose") == "_oauth_state" and r.get("state_hash") == _safe_id(state)
             ]
             if len(rows) != 1:
-                raise GoogleOAuthError("OAuth state无效或已过期")
+                raise GoogleOAuthError("OAuth state ไม่ถูกต้องหรือหมดอายุแล้ว")
             row = rows[0]
             if row.get("used_at") or row.get("used") or float(row.get("expires_at", 0)) <= self.clock():
-                raise GoogleOAuthError("OAuth state无效或已过期")
+                raise GoogleOAuthError("OAuth state ไม่ถูกต้องหรือหมดอายุแล้ว")
             # Repository.dispatch_lock is the cross-process SQLite lock.  The
             # process lock keeps the intentionally minimal memory repo safe.
             self._update("credentials", row["id"], {"used_at": self.clock()}, row.get("owner_id"))
@@ -258,14 +258,14 @@ class GoogleService:
             if callable(dispatch):
                 with dispatch() as acquired:
                     if not acquired:
-                        raise GoogleOAuthError("OAuth state无效或已过期")
+                        raise GoogleOAuthError("OAuth state ไม่ถูกต้องหรือหมดอายุแล้ว")
                     yield
                 return
             yield
 
     def callback(self, code: str, state: str) -> dict:
         if not isinstance(code, str) or not code or len(code) > 8192:
-            raise GoogleOAuthError("Google OAuth code无效")
+            raise GoogleOAuthError("Google OAuth code ไม่ถูกต้อง")
         row = self._take_state(state)
         # The callback starts without an owner.  The consumed state is the
         # only authority for selecting the owner's encrypted client config.
@@ -284,9 +284,9 @@ class GoogleService:
                 },
             )
         except (httpx.HTTPError, ValueError, KeyError) as exc:
-            raise GoogleOAuthError("Google OAuth token交换失败") from exc
+            raise GoogleOAuthError("การแลกเปลี่ยน Token ของ Google OAuth ล้มเหลว") from exc
         if response.status_code < 200 or response.status_code >= 300:
-            raise GoogleOAuthError("Google OAuth token交换失败")
+            raise GoogleOAuthError("การแลกเปลี่ยน Token ของ Google OAuth ล้มเหลว")
         try:
             payload = response.json()
             access = payload.get("access_token")
@@ -295,7 +295,7 @@ class GoogleService:
             if not isinstance(access, str) or not access:
                 raise ValueError
         except (ValueError, TypeError, AttributeError):
-            raise GoogleOAuthError("Google OAuth响应无效")
+            raise GoogleOAuthError("การตอบกลับของ Google OAuth ไม่ถูกต้อง")
         old = self._credential(row.get("oauth_purpose"), row.get("owner_id"))
         if not refresh and old:
             try:
@@ -303,7 +303,7 @@ class GoogleService:
             except (KeyError, TypeError, ValueError):
                 refresh = None
         if not refresh:
-            raise GoogleOAuthError("Google OAuth未返回可持久化刷新凭证")
+            raise GoogleOAuthError("Google OAuth ไม่ได้ส่งกลับ Refresh Token สำหรับบันทึกเก็บไว้")
         data = {
             "provider": "google",
             "purpose": row["oauth_purpose"],
@@ -320,22 +320,22 @@ class GoogleService:
         connected = self._scope_sufficient(row["oauth_purpose"], data["scope"])
         result = {"purpose": row["oauth_purpose"], "connected": connected, "owner_id": row["owner_id"]}
         if not connected:
-            result["message"] = "Google权限不足，请重新授权"
+            result["message"] = "สิทธิ์ของ Google ไม่เพียงพอ กรุณายืนยันสิทธิ์ใหม่อีกครั้ง"
         return result
 
     def access_token(self, purpose: str) -> str:
         if purpose not in _PURPOSES:
-            raise ValueError("Google OAuth purpose无效")
+            raise ValueError("purpose ของ Google OAuth ไม่ถูกต้อง")
         credential = self._credential(purpose)
         if not credential:
-            raise GoogleOAuthError("Google OAuth未连接，真实GPU能力已关闭")
+            raise GoogleOAuthError("ยังไม่ได้เชื่อมต่อ Google OAuth ความสามารถ GPU จริงจึงถูกปิดไว้")
         if not self._scope_sufficient(purpose, credential.get("scope")):
-            raise GoogleOAuthError("Google OAuth权限不足，请重新授权")
+            raise GoogleOAuthError("สิทธิ์ของ Google ไม่เพียงพอ กรุณายืนยันสิทธิ์ใหม่อีกครั้ง")
         try:
             access = decrypt_secret(credential["encrypted_access_token"])
             refresh = decrypt_secret(credential["encrypted_refresh_token"])
         except (KeyError, ValueError) as exc:
-            raise GoogleOAuthError("Google OAuth凭证不可用") from exc
+            raise GoogleOAuthError("ข้อมูลประจำตัว Google OAuth ไม่สามารถใช้งานได้") from exc
         if float(credential.get("expires_at", 0)) > self.clock() + 60:
             return access
         client_id, client_secret, _redirect = self._config()
@@ -350,9 +350,9 @@ class GoogleService:
                 },
             )
         except httpx.HTTPError as exc:
-            raise GoogleOAuthError("Google OAuth刷新失败") from exc
+            raise GoogleOAuthError("การรีเฟรช Google OAuth ล้มเหลว") from exc
         if response.status_code < 200 or response.status_code >= 300:
-            raise GoogleOAuthError("Google OAuth刷新失败")
+            raise GoogleOAuthError("การรีเฟรช Google OAuth ล้มเหลว")
         try:
             payload = response.json()
             new_access = payload.get("access_token")
@@ -360,7 +360,7 @@ class GoogleService:
             if not isinstance(new_access, str) or not new_access:
                 raise ValueError
         except (ValueError, TypeError, AttributeError):
-            raise GoogleOAuthError("Google OAuth刷新响应无效")
+            raise GoogleOAuthError("การตอบกลับการรีเฟรช Google OAuth ไม่ถูกต้อง")
         new_refresh = payload.get("refresh_token")
         self._update(
             "credentials",
@@ -378,7 +378,7 @@ class GoogleService:
 
     def disconnect(self, purpose: str) -> bool:
         if purpose not in _PURPOSES:
-            raise ValueError("Google OAuth purpose无效")
+            raise ValueError("purpose ของ Google OAuth ไม่ถูกต้อง")
         credential = self._credential(purpose)
         if not credential:
             return False

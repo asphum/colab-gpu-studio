@@ -3,27 +3,22 @@
   "model_id": "minimax-h3",
   "model": {
     "model_id": "minimax-h3",
-    "display_name": "MiniMax H3 图生视频（带声音）",
+    "display_name": "MiniMax H3 ภาพเป็นวิดีโอ (พร้อมเสียง)",
     "revision": "54472221d27c695fca9621b0c3ed52f06c4af707",
     "source": "https://huggingface.co/Comfy-Org/MiniMax-H3",
     "license": "minimax-h3-community-license-agreement",
     "modality": "video",
-    "resource_profile": {
-      "disk_gb": 44,
-      "weights_gb": 40.1,
-      "min_vram_gb": 24,
-      "min_ram_gb": 40
-    },
+    "resource_profile": "H3 FL2VA int8_convrot + qwen3vl-32b nvfp4 ตัวเข้ารหัส + Lightning 8 ก้าว LoRA (L4)",
     "variants": [
-      "H3 FL2VA int8_convrot + qwen3vl-32b nvfp4 编码器 + Lightning 8 步 LoRA（L4）"
+      "H3 FL2VA int8_convrot + qwen3vl-32b nvfp4 ตัวเข้ารหัส + Lightning 8 ก้าว LoRA (L4)"
     ]
   },
   "manifest": {
     "workflow_key": "minimax-h3-i2v",
     "model_id": "minimax-h3",
     "version": "1.1.0",
-    "title": "MiniMax H3 图生视频（带声音）",
-    "description": "以一张首帧图（可加尾帧图）生成带原生音频的短视频。8 步 Lightning LoRA；固定在 Colab L4 上运行。",
+    "title": "MiniMax H3 ภาพเป็นวิดีโอ (พร้อมเสียง)",
+    "description": "สร้างวิดีโอสั้นพร้อมเสียงต้นฉบับจากภาพแรก (และเลือกใส่ภาพท้ายได้) ใช้ Lightning LoRA 8 ก้าว กำหนดรันบน Colab L4",
     "modality": "video",
     "executor": "comfyui",
     "compute_spec": {
@@ -35,8 +30,8 @@
     "parameters": {
       "first_frame": {
         "type": "image",
-        "label": "首帧图",
-        "description": "会被拉伸到所选画面比例，请先裁成同样的比例。",
+        "label": "ภาพแรก",
+        "description": "ภาพจะถูกขยายตามอัตราส่วนที่เลือก โปรดครอบตัดให้ตรงกับอัตราส่วนล่วงหน้า",
         "binding": {
           "node": "1",
           "input": "image"
@@ -45,8 +40,8 @@
       },
       "last_frame": {
         "type": "image",
-        "label": "尾帧图",
-        "description": "可选。模型会让视频收尾在这张图上（居中裁切到画面比例）。",
+        "label": "ภาพท้าย",
+        "description": "ระบุหรือไม่ก็ได้ โมเดลจะทำให้วิดีโอจบที่ภาพนี้ (ครอบตัดตรงกลางตามอัตราส่วน)",
         "binding": {
           "node": "2",
           "input": "image"
@@ -55,8 +50,8 @@
       },
       "prompt": {
         "type": "string",
-        "label": "提示词",
-        "description": "描述镜头、动作和声音（Audio:）。",
+        "label": "พรอมต์ (Prompt)",
+        "description": "อธิบายมุมกล้อง การเคลื่อนไหว และเสียง (Audio:)",
         "binding": {
           "node": "20",
           "input": "prompt"
@@ -66,8 +61,8 @@
       },
       "width": {
         "type": "integer",
-        "label": "宽",
-        "description": "必须是 32 的倍数。",
+        "label": "ความกว้าง",
+        "description": "ต้องหารด้วย 32 ลงตัว",
         "binding": {
           "node": "20",
           "input": "width"
@@ -79,8 +74,8 @@
       },
       "height": {
         "type": "integer",
-        "label": "高",
-        "description": "必须是 32 的倍数。",
+        "label": "ความสูง",
+        "description": "ต้องหารด้วย 32 ลงตัว",
         "binding": {
           "node": "20",
           "input": "height"
@@ -92,8 +87,8 @@
       },
       "length": {
         "type": "integer",
-        "label": "帧数（24 帧/秒）",
-        "description": "124 帧约 5 秒；会向上取到 17k+5。",
+        "label": "จำนวนเฟรม (24 fps)",
+        "description": "124 เฟรมประมาณ 5 วินาที โดยจะปัดเศษขึ้นเป็น 17k+5",
         "binding": {
           "node": "20",
           "input": "length"
@@ -105,8 +100,8 @@
       },
       "seed": {
         "type": "integer",
-        "label": "随机种子",
-        "description": "-1 表示每次随机。",
+        "label": "Seed สุ่ม",
+        "description": "-1 หมายถึงสุ่มใหม่ทุกครั้ง",
         "binding": {
           "node": "23",
           "input": "noise_seed"
@@ -118,8 +113,8 @@
       },
       "steps": {
         "type": "integer",
-        "label": "步数",
-        "description": "Lightning LoRA 针对 8 步调校。",
+        "label": "จำนวนก้าว (Steps)",
+        "description": "Lightning LoRA ปรับแต่งมาสำหรับ 8 ก้าว",
         "binding": {
           "node": "22",
           "input": "steps"
