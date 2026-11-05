@@ -7,10 +7,10 @@ export function ComputeSpecs({ specs }: { specs: ComputeSpec[] }) {
       const value = key as Record<string, unknown>;
       const variant = String(value.variant || '');
       if (!['VARIANT_GPU', 'GPU'].includes(variant)) return null;
-      const accelerator = String(value.accelerator || '未知 GPU');
-      const shape = ['SHAPE_HIGHMEM', 'HIGHMEM'].includes(String(value.shape)) ? '高内存' : '标准内存';
-      return <p className="pill" key={JSON.stringify(key)}>{accelerator} · {shape} · {spec.eligible === true ? '有申请资格' : '未确认申请资格'}</p>;
+      const accelerator = String(value.accelerator || 'GPU ไม่ทราบชื่อ');
+      const shape = ['SHAPE_HIGHMEM', 'HIGHMEM'].includes(String(value.shape)) ? 'หน่วยความจำสูง (High-RAM)' : 'หน่วยความจำมาตรฐาน';
+      return <p className="pill" key={JSON.stringify(key)}>{accelerator} · {shape} · {spec.eligible === true ? 'มีสิทธิ์ขอใช้งาน' : 'ยังไม่ยืนยันสิทธิ์'}</p>;
     }
-    return <p className="pill" key={spec.id || spec.name || index}>{spec.name || spec.gpu || 'GPU'} · {spec.available === true ? '可用' : spec.available === false ? '不可用' : '状态未知'}{spec.reason ? ` · ${spec.reason}` : ''}</p>;
-  })}<p className="muted">申请资格不保证实时库存；查询不会创建运行时。未确认资格的设备不会被自动选择。</p></div>;
+    return <p className="pill" key={spec.id || spec.name || index}>{spec.name || spec.gpu || 'GPU'} · {spec.available === true ? 'พร้อมใช้งาน' : spec.available === false ? 'ไม่พร้อมใช้งาน' : 'ไม่ทราบสถานะ'}{spec.reason ? ` · ${spec.reason}` : ''}</p>;
+  })}<p className="muted">สิทธิ์การขอใช้งานไม่ได้รับประกันโควตาแบบเรียลไทม์ การตรวจสอบนี้จะไม่สร้าง runtime และอุปกรณ์ที่ยังไม่ยืนยันสิทธิ์จะไม่ถูกเลือกโดยอัตโนมัติ</p></div>;
 }

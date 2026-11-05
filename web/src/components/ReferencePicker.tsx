@@ -18,15 +18,15 @@ export function ReferencePicker({ manifest, assets, selected, onChange, onUpload
   onChange: (ids: string[]) => void; onUpload: (file: File) => Promise<void>;
 }) {
   if (!manifest) return null;
-  if (!supportsReferences(manifest)) return <p className="muted">此工作流不支持参考素材，不会提交图片输入。</p>;
+  if (!supportsReferences(manifest)) return <p className="muted">เวิร์กโฟลว์นี้ไม่รองรับไฟล์อ้างอิง และจะไม่ส่งรูปภาพเข้าไปประมวลผล</p>;
   const available = referenceAssets(assets);
-  return <section className={styles.referencePicker} role="group" aria-label="参考素材">
-    <div className={styles.projectRow}><strong>参考素材</strong><label className="button secondary">上传素材<input hidden type="file" accept="image/*,video/*,audio/*" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) await onUpload(file); }} /></label></div>
-    <p className="muted">仅显示可用素材；Mock 测试图和诊断文件不作为参考图。</p>
+  return <section className={styles.referencePicker} role="group" aria-label="ไฟล์อ้างอิง">
+    <div className={styles.projectRow}><strong>ไฟล์อ้างอิง</strong><label className="button secondary">อัปโหลดไฟล์<input hidden type="file" accept="image/*,video/*,audio/*" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) await onUpload(file); }} /></label></div>
+    <p className="muted">แสดงเฉพาะไฟล์ที่ใช้ได้เท่านั้น รูปภาพทดสอบ Mock และไฟล์วินิจฉัยจะไม่ถูกนำมาใช้เป็นภาพอ้างอิง</p>
     {available.length ? <div className={styles.referenceList}>{available.map((asset) => <label className={styles.referenceRow} key={asset.id}>
-      <input type="checkbox" aria-label={`选用 ${asset.filename || asset.id}`} checked={selected.includes(asset.id)} onChange={(event) => onChange(event.target.checked ? [...new Set([...selected, asset.id])] : selected.filter((id) => id !== asset.id))} />
-      {asset.mime.startsWith('image/') ? <img src={asset.thumbnail_url || `/api/assets/${asset.id}/thumbnail`} alt="" loading="lazy" /> : <span className={styles.referenceMedia}>{asset.mime.startsWith('video/') ? '视频' : '音频'}</span>}
+      <input type="checkbox" aria-label={`เลือก ${asset.filename || asset.id}`} checked={selected.includes(asset.id)} onChange={(event) => onChange(event.target.checked ? [...new Set([...selected, asset.id])] : selected.filter((id) => id !== asset.id))} />
+      {asset.mime.startsWith('image/') ? <img src={asset.thumbnail_url || `/api/assets/${asset.id}/thumbnail`} alt="" loading="lazy" /> : <span className={styles.referenceMedia}>{asset.mime.startsWith('video/') ? 'วิดีโอ' : 'เสียง'}</span>}
       <span className={styles.referenceName}>{asset.filename || asset.id}</span>
-    </label>)}</div> : <p className="muted">暂无参考素材，可上传自己的图片。</p>}
+    </label>)}</div> : <p className="muted">ยังไม่มีไฟล์อ้างอิง สามารถอัปโหลดรูปภาพของคุณเองได้</p>}
   </section>;
 }

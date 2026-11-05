@@ -31,7 +31,7 @@
     margin-bottom: 4px;
   }
 
-  /* 提示词多行文本或单行长文本通栏展示 */
+  /* แสดงผล prompt หลายบรรทัดหรือข้อความยาวเต็มแถว */
   .field:has(textarea),
   .field:has(input[type='text']) {
     grid-column: 1 / -1;

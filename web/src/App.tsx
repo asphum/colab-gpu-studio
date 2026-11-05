@@ -13,7 +13,7 @@ import { GoogleOAuthSetup } from './components/GoogleOAuthSetup';
 import { ComputeSpecs } from './components/ComputeSpecs';
 import styles from './gpu.module.css';
 
-const tabs = ['创作', '任务', '作品', '设置'] as const;
+const tabs = ['สร้างสรรค์', 'งาน', 'ผลงาน', 'ตั้งค่า'] as const;
 type Tab = typeof tabs[number];
 const terminalStates = new Set(['completed', 'succeeded', 'failed', 'failed_final', 'cancelled', 'cancelled_local', 'blocked']);
 
@@ -56,23 +56,23 @@ function keyId() {
 }
 
 function shown(value: unknown) {
-  return value === null || value === undefined || value === '' ? '未知' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+  return value === null || value === undefined || value === '' ? 'ไม่ระบุ' : typeof value === 'object' ? JSON.stringify(value) : String(value);
 }
 
 function readableState(value?: string) {
   return value
     ? ({
-        queued: '排队中', pending: '等待中', preparing: '准备中', validating: '校验中',
-        creating: '创建运行时', reserved: '已预留', active: '运行时已启动', started: '已启动',
-        uploading: '上传中', running: '运行中', saving: '保存中', cleanup_pending: '清理中',
-        deleted: '已释放', quarantined: '已隔离', completed: '已完成', succeeded: '已完成',
-        failed: '失败', failed_final: '最终失败', cancelled: '已取消', cancelled_local: '已取消', blocked: '已阻止',
+        queued: 'อยู่ในคิว', pending: 'รอดำเนินการ', preparing: 'กำลังเตรียม', validating: 'กำลังตรวจสอบ',
+        creating: 'กำลังสร้าง Runtime', reserved: 'สำรองแล้ว', active: 'Runtime กำลังทำงาน', started: 'เริ่มทำงานแล้ว',
+        uploading: 'กำลังอัปโหลด', running: 'กำลังประมวลผล', saving: 'กำลังบันทึก', cleanup_pending: 'กำลังล้างข้อมูล',
+        deleted: 'ปล่อยคืนแล้ว', quarantined: 'กักกันแล้ว', completed: 'เสร็จสมบูรณ์', succeeded: 'เสร็จสมบูรณ์',
+        failed: 'ล้มเหลว', failed_final: 'ล้มเหลวถาวร', cancelled: 'ยกเลิกแล้ว', cancelled_local: 'ยกเลิกแล้ว', blocked: 'ถูกระงับ',
       }[value] || value)
-    : '未知';
+    : 'ไม่ระบุ';
 }
 
 function workflowState(value?: string, active?: boolean) {
-  return active ? '已发布 · 当前版本' : ({ draft: '草稿', validated: '已校验', published: '已发布 · 历史版本' }[value || ''] || value || '未知');
+  return active ? 'เผยแพร่แล้ว · เวอร์ชันปัจจุบัน' : ({ draft: 'ฉบับร่าง', validated: 'ตรวจสอบแล้ว', published: 'เผยแพร่แล้ว · ประวัติ' }[value || ''] || value || 'ไม่ระบุ');
 }
 
 function progressPercent(value?: number) {
@@ -106,22 +106,22 @@ function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
     <main className="login">
       <form className="loginCard" onSubmit={submit}>
         <h1>Colab GPU Studio</h1>
-        <p className="muted">输入访问密码解锁独立工作台</p>
+        <p className="muted">ใส่รหัสผ่านเพื่อเข้าสู่สตูดิโอส่วนตัว</p>
         <label>
-          访问密码
+          รหัสผ่านการเข้าถึง
           <input
             autoFocus
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
-            placeholder="请输入 STUDIO_PASSWORD"
+            placeholder="กรุณากรอก STUDIO_PASSWORD"
             required
           />
         </label>
         {error && <p className="status error" role="alert">{error}</p>}
         <button className="button" disabled={busy} type="submit">
-          {busy ? '登录中…' : '进入工作台'}
+          {busy ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่สตูดิโอ'}
         </button>
       </form>
     </main>
@@ -167,15 +167,15 @@ function ProjectSheet({
         className={styles.dialog}
         role="dialog"
         aria-modal="true"
-        aria-label="项目管理"
+        aria-label="จัดการโปรเจกต์"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.cardHead}>
-          <h2>项目管理</h2>
-          <button className="button secondary" type="button" onClick={onClose}>完成</button>
+          <h2>จัดการโปรเจกต์</h2>
+          <button className="button secondary" type="button" onClick={onClose}>เสร็จสิ้น</button>
         </div>
         <div className="field">
-          <label>选择当前项目</label>
+          <label>เลือกโปรเจกต์ปัจจุบัน</label>
           <select
             value={projectId}
             onChange={(e) => {
@@ -183,24 +183,24 @@ function ProjectSheet({
               onClose();
             }}
           >
-            <option value="">未选择项目</option>
+            <option value="">ยังไม่ได้เลือกโปรเจกต์</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.title}</option>
             ))}
           </select>
         </div>
         <form className="field" onSubmit={handleCreate}>
-          <label>新建项目</label>
+          <label>สร้างโปรเจกต์ใหม่</label>
           <div className="actions" style={{ display: 'flex', gap: '2vw' }}>
             <input
               className="fieldInput"
               style={{ flex: 1 }}
-              placeholder="项目名称"
+              placeholder="ชื่อโปรเจกต์"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
             <button className="button" disabled={creating || !title.trim()} type="submit">
-              {creating ? '创建中…' : '创建'}
+              {creating ? 'กำลังสร้าง…' : 'สร้าง'}
             </button>
           </div>
         </form>
@@ -296,8 +296,8 @@ function CreatePanel({
   if (!projectId) {
     return (
       <div className="empty">
-        <strong>请先在顶栏选择或新建项目</strong>
-        <span>项目用于归档参数预设、输入素材和输出作品。</span>
+        <strong>กรุณาเลือกหรือสร้างโปรเจกต์ที่แถบด้านบนก่อน</strong>
+        <span>โปรเจกต์ใช้สำหรับจัดเก็บพรีเซ็ตพารามิเตอร์ ไฟล์นำเข้า และผลงานที่สร้าง</span>
       </div>
     );
   }
@@ -308,17 +308,17 @@ function CreatePanel({
 
   return (
     <div className={styles.stack}>
-      {/* 1. 工作流卡片选择 */}
+      {/* 1. เลือกเวิร์กโฟลว์ */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>1. 选择工作流</h2>
-          <span className="pill">{workflowFamilies.length} 个可用流程</span>
+          <h2>1. เลือกเวิร์กโฟลว์</h2>
+          <span className="pill">{workflowFamilies.length} เวิร์กโฟลว์ที่ใช้ได้</span>
         </div>
 
         {workflowFamilies.length === 0 ? (
           <div className="empty">
-            <strong>暂无已发布工作流</strong>
-            <span>请前往“设置 → 工作流管理”发布或配置所需工作流。</span>
+            <strong>ยังไม่มีเวิร์กโฟลว์ที่เผยแพร่</strong>
+            <span>กรุณาไปที่ “ตั้งค่า → จัดการเวิร์กโฟลว์” เพื่อเผยแพร่หรือกำหนดค่าเวิร์กโฟลว์ที่ต้องการ</span>
           </div>
         ) : (
           <div className={styles.stack} style={{ gap: '2.5vw' }}>
@@ -343,12 +343,12 @@ function CreatePanel({
                     <div>
                       <strong>{key}</strong>
                       <p className="muted" style={{ margin: '0.5vw 0 0', fontSize: '3vw' }}>
-                        模型：{model?.display_name || fam.modelId}
+                        โมเดล: {model?.display_name || fam.modelId}
                       </p>
                     </div>
                     {fam.items.length > 1 ? (
                       <select
-                        aria-label="切换版本"
+                        aria-label="เปลี่ยนเวอร์ชัน"
                         value={isSelected ? workflowId : currentWf.id}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
@@ -362,7 +362,7 @@ function CreatePanel({
                       >
                         {fam.items.map((i) => (
                           <option key={i.id} value={i.id}>
-                            v{i.workflow_version} {i.active ? '（当前）' : ''}
+                            v{i.workflow_version} {i.active ? '（ปัจจุบัน）' : ''}
                           </option>
                         ))}
                       </select>
@@ -378,11 +378,11 @@ function CreatePanel({
 
         {disabledModels.length > 0 && (
           <details className="foldable">
-            <summary>暂未开放模型（{disabledModels.length}）</summary>
+            <summary>โมเดลที่ยังไม่เปิดให้ใช้ ({disabledModels.length})</summary>
             <div className="foldContent">
               {disabledModels.map((m) => (
                 <p key={m.model_id} className="muted" style={{ margin: 0, fontSize: '3vw' }}>
-                  • <strong>{m.display_name}</strong>：{m.reason || '待管理员审核后开放'}
+                  • <strong>{m.display_name}</strong>: {m.reason || 'รอผู้ดูแลระบบตรวจสอบก่อนเปิดใช้งาน'}
                 </p>
               ))}
             </div>
@@ -390,12 +390,12 @@ function CreatePanel({
         )}
       </section>
 
-      {/* 2. 参数配置 */}
+      {/* 2. ตั้งค่าพารามิเตอร์ */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>2. 参数设置</h2>
+          <h2>2. ตั้งค่าพารามิเตอร์</h2>
           <details style={{ position: 'relative' }}>
-            <summary className="pill" style={{ cursor: 'pointer' }}>预设管理</summary>
+            <summary className="pill" style={{ cursor: 'pointer' }}>จัดการพรีเซ็ต</summary>
             <div
               style={{
                 position: 'absolute', right: 0, top: '100%', zIndex: 10, minWidth: '60vw',
@@ -404,7 +404,7 @@ function CreatePanel({
               }}
             >
               <div className="field">
-                <label>套用预设</label>
+                <label>ใช้พรีเซ็ต</label>
                 <select
                   defaultValue=""
                   onChange={(e) => {
@@ -412,7 +412,7 @@ function CreatePanel({
                     if (preset) onApplyPreset(preset);
                   }}
                 >
-                  <option value="">选择预设</option>
+                  <option value="">เลือกพรีเซ็ต</option>
                   {presets.filter((p) => p.workflow_version_id === workflowId).map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -421,14 +421,14 @@ function CreatePanel({
               <div style={{ marginTop: '2vw' }}>
                 {!showPresetSave ? (
                   <button className="button secondary" style={{ width: '100%', minHeight: '8vw' }} type="button" onClick={() => setShowPresetSave(true)}>
-                    存为新预设
+                    บันทึกเป็นพรีเซ็ตใหม่
                   </button>
                 ) : (
                   <div style={{ display: 'flex', gap: '1.5vw' }}>
                     <input
                       className="fieldInput"
                       style={{ flex: 1, minHeight: '8vw', padding: '1vw 2vw' }}
-                      placeholder="预设名称"
+                      placeholder="ชื่อพรีเซ็ต"
                       value={presetName}
                       onChange={(e) => setPresetName(e.target.value)}
                     />
@@ -443,7 +443,7 @@ function CreatePanel({
                         setShowPresetSave(false);
                       }}
                     >
-                      保存
+                      บันทึก
                     </button>
                   </div>
                 )}
@@ -474,21 +474,21 @@ function CreatePanel({
         )}
       </section>
 
-      {/* 3. 运行控制台 */}
+      {/* 3. การสร้างและการประมวลผล */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>3. 生成与运行</h2>
+          <h2>3. การสร้างและการประมวลผล</h2>
         </div>
 
         <div className="field">
-          <label>运行环境</label>
+          <label>สภาพแวดล้อมการประมวลผล</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2vw' }}>
             <button
               type="button"
               className={runtime === 'mock' ? 'button' : 'button secondary'}
               onClick={() => setRuntime('mock')}
             >
-              离线模拟 (Mock)
+              จำลองออฟไลน์ (Mock)
             </button>
             <button
               type="button"
@@ -496,7 +496,7 @@ function CreatePanel({
               disabled={!settings?.real_enabled}
               onClick={() => setRuntime('colab')}
             >
-              Colab GPU {settings?.real_enabled ? '' : '（未启用）'}
+              Colab GPU {settings?.real_enabled ? '' : '（ยังไม่เปิดใช้งาน）'}
             </button>
           </div>
         </div>
@@ -504,7 +504,7 @@ function CreatePanel({
         {runtime === 'colab' && (
           <div className="twoCol">
             <div className="field">
-              <label>最长运行（分钟）</label>
+              <label>เวลาประมวลผลสูงสุด (นาที)</label>
               <input
                 type="number"
                 min={5}
@@ -514,9 +514,9 @@ function CreatePanel({
               />
             </div>
             <div className="field">
-              <label>预算限额状态</label>
+              <label>สถานะโควตางบประมาณ</label>
               <div className="pill" style={{ width: '100%', minHeight: 'calc(var(--u) * 10)' }}>
-                日限额：{shown(settings?.budget?.daily_units)} CU
+                โควตารายวัน: {shown(settings?.budget?.daily_units)} CU
               </div>
             </div>
           </div>
@@ -529,7 +529,7 @@ function CreatePanel({
           type="button"
           onClick={onSubmit}
         >
-          {loading === 'submit' ? '提交任务中…' : '立即生成'}
+          {loading === 'submit' ? 'กำลังส่งงาน…' : 'เริ่มสร้างทันที'}
         </button>
         {error && <p className="status error" role="alert">{error}</p>}
       </section>
@@ -558,9 +558,9 @@ function TasksPanel({
     <div className={styles.stack}>
       <section className={styles.card}>
         <div className={styles.sectionTitle}>
-          <h2>当前项目任务</h2>
+          <h2>งานในโปรเจกต์ปัจจุบัน</h2>
           <button className="button secondary" style={{ minHeight: '8vw', padding: '1vw 3vw' }} type="button" onClick={onRefresh}>
-            {refreshing ? '刷新中…' : '刷新'}
+            {refreshing ? 'กำลังรีเฟรช…' : 'รีเฟรช'}
           </button>
         </div>
         {error && <p className="status error" role="alert">{error}</p>}
@@ -572,12 +572,12 @@ function TasksPanel({
                 <span className="pill">{job.provider === 'mock' ? 'MOCK · ' : ''}{readableState(job.state)}</span>
               </div>
               <div className={styles.jobMeta}>
-                <span>任务：{job.id.slice(0, 8)}</span>
-                <span>创建：{job.created_at || '刚刚'}</span>
-                {job.estimated_units ? <span>预估：{shown(job.estimated_units)} CU</span> : null}
+                <span>งาน: {job.id.slice(0, 8)}</span>
+                <span>สร้างเมื่อ: {job.created_at || 'เมื่อสักครู่'}</span>
+                {job.estimated_units ? <span>ประเมิน: {shown(job.estimated_units)} CU</span> : null}
               </div>
               {progressPercent(job.progress) !== null && (
-                <div className={styles.progress} aria-label={`进度 ${progressPercent(job.progress)}%`}>
+                <div className={styles.progress} aria-label={`ความคืบหน้า ${progressPercent(job.progress)}%`}>
                   <span style={{ width: `${progressPercent(job.progress)}%` }} />
                 </div>
               )}
@@ -586,16 +586,16 @@ function TasksPanel({
               )}
               <div className="actions">
                 <button className="button secondary" type="button" onClick={() => onDetail(job)}>
-                  查看详情
+                  ดูรายละเอียด
                 </button>
                 {!terminalStates.has(String(job.state || '').toLowerCase()) && (
                   <button className="button danger" type="button" onClick={() => onCancel(job.id)}>
-                    取消
+                    ยกเลิก
                   </button>
                 )}
                 {String(job.state || '').toLowerCase().includes('failed') && (
                   <button className="button secondary" type="button" onClick={() => onRetry(job.id)}>
-                    重试
+                    ลองใหม่
                   </button>
                 )}
               </div>
@@ -603,8 +603,8 @@ function TasksPanel({
           ))
         ) : (
           <div className="empty">
-            <strong>当前项目暂无任务</strong>
-            <span>在创作页发起生成后，任务会显示在这里。</span>
+            <strong>ยังไม่มีงานในโปรเจกต์นี้</strong>
+            <span>เมื่องานสร้างถูกส่งจากแท็บสร้างสรรค์ รายการงานจะแสดงที่นี่</span>
           </div>
         )}
       </section>
@@ -626,8 +626,8 @@ function GalleryPanel({
   return (
     <section className={styles.card}>
       <div className={styles.cardHead}>
-        <h2>作品画廊</h2>
-        <span className="pill">{gallery.length} 件作品</span>
+        <h2>แกลเลอรีผลงาน</h2>
+        <span className="pill">{gallery.length} ผลงาน</span>
       </div>
       {gallery.length ? (
         <div className={styles.assetGrid}>
@@ -638,21 +638,21 @@ function GalleryPanel({
               <article className={styles.asset} key={asset.id}>
                 <button className={styles.assetImage} type="button" onClick={() => onOpen(asset)}>
                   {isVideo ? (
-                    <video src={assetUrl(asset)} preload="metadata" muted aria-label={asset.filename || '视频产物'} />
+                    <video src={assetUrl(asset)} preload="metadata" muted aria-label={asset.filename || 'ไฟล์วิดีโอ'} />
                   ) : isJson ? (
-                    <div className={styles.diagnosticsThumb}>JSON<br /><small>诊断文件</small></div>
+                    <div className={styles.diagnosticsThumb}>JSON<br /><small>ไฟล์วินิจฉัย</small></div>
                   ) : (
-                    <img src={assetUrl(asset, true)} alt={asset.filename || '产物'} />
+                    <img src={assetUrl(asset, true)} alt={asset.filename || 'ผลงาน'} />
                   )}
                 </button>
                 <footer>
                   <span className={styles.assetName}>{asset.filename || asset.id}</span>
                   <div className="actions" style={{ gap: '1vw' }}>
                     <button className="button secondary" style={{ flex: 1, minHeight: '7vw', padding: '1vw' }} type="button" onClick={() => onFavorite(asset)}>
-                      {asset.favorite ? '已收藏' : '收藏'}
+                      {asset.favorite ? 'เลิกถูกใจ' : 'ถูกใจ'}
                     </button>
                     <button className="button danger" style={{ minHeight: '7vw', padding: '1vw 2vw' }} type="button" onClick={() => onDelete(asset)}>
-                      删除
+                      ลบ
                     </button>
                   </div>
                 </footer>
@@ -662,8 +662,8 @@ function GalleryPanel({
         </div>
       ) : (
         <div className="empty">
-          <strong>暂无生成作品</strong>
-          <span>生成成功的图像与视频会自动保存在这里。</span>
+          <strong>ยังไม่มีผลงานที่สร้าง</strong>
+          <span>ภาพและวิดีโอที่สร้างสำเร็จจะถูกบันทึกไว้ที่นี่โดยอัตโนมัติ</span>
         </div>
       )}
     </section>
@@ -689,17 +689,17 @@ function WorkflowsPanel({
   return (
     <div className={styles.stack}>
       <details className="foldable">
-        <summary>导入新工作流草稿</summary>
+        <summary>นำเข้าร่างเวิร์กโฟลว์ใหม่</summary>
         <div className="foldContent">
           <textarea
             className={styles.code}
-            placeholder="粘贴工作流 JSON bundle (含 manifest, api_graph, object_info)"
+            placeholder="วาง JSON bundle ของเวิร์กโฟลว์ (รวม manifest, api_graph, object_info)"
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
           <div className="actions">
             <button className="button secondary" type="button" onClick={() => fileRef.current?.click()}>
-              读取 JSON 文件
+              เลือกไฟล์ JSON
             </button>
             <input
               ref={fileRef}
@@ -713,7 +713,7 @@ function WorkflowsPanel({
               }}
             />
             <button className="button" type="button" disabled={!text.trim()} onClick={() => onImport(text)}>
-              导入草稿
+              นำเข้าร่าง
             </button>
           </div>
         </div>
@@ -721,8 +721,8 @@ function WorkflowsPanel({
 
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>已注册工作流版本</h2>
-          <span className="pill">{workflows.length} 个版本</span>
+          <h2>เวอร์ชันเวิร์กโฟลว์ที่ลงทะเบียนแล้ว</h2>
+          <span className="pill">{workflows.length} เวอร์ชัน</span>
         </div>
         {workflows.length ? (
           workflows.map((wf) => (
@@ -731,7 +731,7 @@ function WorkflowsPanel({
                 <div>
                   <strong>{wf.workflow_key} · v{wf.workflow_version}</strong>
                   <p className="muted" style={{ margin: '0.5vw 0 0', fontSize: '3vw' }}>
-                    模型 {wf.model_id}
+                    โมเดล {wf.model_id}
                   </p>
                 </div>
                 <span className="pill">{workflowState(wf.state, wf.active)}</span>
@@ -743,7 +743,7 @@ function WorkflowsPanel({
                   disabled={wf.state === 'published'}
                   onClick={() => onValidate(wf)}
                 >
-                  校验
+                  ตรวจสอบ
                 </button>
                 <button
                   className="button"
@@ -751,7 +751,7 @@ function WorkflowsPanel({
                   disabled={wf.state === 'published'}
                   onClick={() => onPublish(wf)}
                 >
-                  确认发布
+                  ยืนยันการเผยแพร่
                 </button>
                 <button
                   className="button secondary"
@@ -759,14 +759,14 @@ function WorkflowsPanel({
                   disabled={wf.state !== 'published'}
                   onClick={() => onRollback(wf)}
                 >
-                  回滚为此版本
+                  ย้อนกลับไปใช้เวอร์ชันนี้
                 </button>
               </div>
             </article>
           ))
         ) : (
           <div className="empty">
-            <strong>未检测到工作流</strong>
+            <strong>ตรวจไม่พบเวิร์กโฟลว์</strong>
           </div>
         )}
       </section>
@@ -811,36 +811,36 @@ function SettingsPanel({
 
   return (
     <div className={styles.stack}>
-      {/* 1. 运行与配额概览 */}
+      {/* 1. ภาพรวมการทำงานและโควตา */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>运行概览与配额</h2>
-          <span className="pill">真实 GPU: {settings?.real_enabled ? '已启用' : '未启用'}</span>
+          <h2>ภาพรวมการทำงานและโควตา</h2>
+          <span className="pill">GPU จริง: {settings?.real_enabled ? 'เปิดใช้งานแล้ว' : 'ยังไม่เปิดใช้งาน'}</span>
         </div>
         <div className={styles.statGrid}>
           <div className={styles.stat}>
-            <span>今日估算</span>
+            <span>ประเมินวันนี้</span>
             <strong>{shown((usage as Record<string, unknown> | null)?.estimated_units)}</strong>
           </div>
           <div className={styles.stat}>
-            <span>实际消耗</span>
+            <span>ใช้งานจริง</span>
             <strong>{shown((usage as Record<string, unknown> | null)?.actual_units)}</strong>
           </div>
           <div className={styles.stat}>
-            <span>日限额</span>
+            <span>โควตารายวัน</span>
             <strong>{shown((usage as Record<string, unknown> | null)?.daily_limit)}</strong>
           </div>
           <div className={styles.stat}>
-            <span>活跃运行时</span>
+            <span>Runtime ที่ทำงานอยู่</span>
             <strong>{shown((usage as Record<string, unknown> | null)?.active_runtimes)}</strong>
           </div>
         </div>
       </section>
 
-      {/* 2. Google 连接 */}
+      {/* 2. การเชื่อมต่อ Google */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>Google 连接</h2>
+          <h2>การเชื่อมต่อ Google</h2>
         </div>
         {(['colab', 'drive'] as const).map((purpose) => {
           const state = settings?.google?.[purpose];
@@ -849,7 +849,7 @@ function SettingsPanel({
               <div className={styles.workflowHeader}>
                 <strong>{purpose === 'colab' ? 'Google Colab' : 'Google Drive'}</strong>
                 <span className="pill">
-                  {state?.connected ? '已连接' : (oauthConfigured || state?.configured) ? '已配置未连接' : '未配置'}
+                  {state?.connected ? 'เชื่อมต่อแล้ว' : (oauthConfigured || state?.configured) ? 'ตั้งค่าแล้วยังไม่เชื่อมต่อ' : 'ยังไม่ได้ตั้งค่า'}
                 </span>
               </div>
               <div className="actions">
@@ -859,42 +859,42 @@ function SettingsPanel({
                   disabled={!oauthConfigured && !state?.configured}
                   onClick={() => onConnect(purpose)}
                 >
-                  连接 {purpose === 'colab' ? 'Google Colab' : 'Google Drive'}
+                  เชื่อมต่อ {purpose === 'colab' ? 'Google Colab' : 'Google Drive'}
                 </button>
                 <button className="button danger" type="button" onClick={() => onDisconnect(purpose)}>
-                  断开
+                  ยกเลิกการเชื่อมต่อ
                 </button>
               </div>
             </div>
           );
         })}
         <details className="foldable">
-          <summary>Google OAuth 应用配置</summary>
+          <summary>การตั้งค่าแอป Google OAuth</summary>
           <div className="foldContent">
             <GoogleOAuthSetup onConfigured={() => setOauthConfigured(true)} />
           </div>
         </details>
       </section>
 
-      {/* 3. GPU 资源与急停 */}
+      {/* 3. การจัดการทรัพยากร GPU */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>GPU 资源管理</h2>
+          <h2>การจัดการทรัพยากร GPU</h2>
         </div>
         <div className="actions">
           <button className="button secondary" disabled={loading === 'check'} type="button" onClick={onCheck}>
-            {loading === 'check' ? '检查中…' : '检查可用 GPU'}
+            {loading === 'check' ? 'กำลังตรวจสอบ…' : 'ตรวจสอบ GPU ที่พร้อมใช้'}
           </button>
           <button className="button danger" disabled={loading === 'stop'} type="button" onClick={onStop}>
-            {loading === 'stop' ? '急停中…' : '停止本站计算任务'}
+            {loading === 'stop' ? 'กำลังหยุดฉุกเฉิน…' : 'หยุดงานประมวลผลทั้งหมด'}
           </button>
         </div>
         {specs.length ? <ComputeSpecs specs={specs} /> : null}
       </section>
 
-      {/* 4. 工作流管理收纳入口 */}
+      {/* 4. จัดการเวิร์กโฟลว์และโมเดล */}
       <details className="foldable">
-        <summary>工作流与模型管理</summary>
+        <summary>จัดการเวิร์กโฟลว์และโมเดล</summary>
         <div className="foldContent">
           <WorkflowsPanel
             workflows={workflows}
@@ -906,10 +906,10 @@ function SettingsPanel({
         </div>
       </details>
 
-      {/* 5. 退出登录 */}
+      {/* 5. ออกจากระบบ */}
       <div style={{ textAlign: 'center', marginTop: '2vw' }}>
         <button className="button danger" type="button" onClick={onLogout}>
-          退出登录
+          ออกจากระบบ
         </button>
       </div>
 
@@ -920,7 +920,7 @@ function SettingsPanel({
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
-  const [tab, setTab] = useState<Tab>('创作');
+  const [tab, setTab] = useState<Tab>('สร้างสรรค์');
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState('');
   const [showProjectSheet, setShowProjectSheet] = useState(false);
@@ -1015,7 +1015,7 @@ export default function App() {
         setManifest(next);
         setParams(defaultParams(next));
       }
-    }).catch((cause) => alive && setError(`参数 schema：${apiMessage(cause)}`)).finally(() => alive && setLoading(''));
+    }).catch((cause) => alive && setError(`พารามิเตอร์ schema: ${apiMessage(cause)}`)).finally(() => alive && setLoading(''));
     return () => { alive = false; };
   }, [workflowId]);
 
@@ -1053,7 +1053,7 @@ export default function App() {
     getReferenceAssets(projectId).then((next) => {
       if (alive) setReferenceImages(referenceAssets(next));
     }).catch((cause) => {
-      if (alive) setError(`素材：${apiMessage(cause)}`);
+      if (alive) setError(`ไฟล์: ${apiMessage(cause)}`);
     });
     return () => { alive = false; };
   }, [projectId, loggedIn]);
@@ -1065,7 +1065,7 @@ export default function App() {
   useEffect(() => {
     if (!projectId || !loggedIn) return;
     let alive = true;
-    getGpuGallery(projectId).then((next) => alive && setGallery(next)).catch((cause) => alive && setError(`作品：${apiMessage(cause)}`));
+    getGpuGallery(projectId).then((next) => alive && setGallery(next)).catch((cause) => alive && setError(`ผลงาน: ${apiMessage(cause)}`));
     return () => { alive = false; };
   }, [projectId, loggedIn, tab]);
 
@@ -1076,7 +1076,7 @@ export default function App() {
       if (workflow) setWorkflowId(workflow.id);
       setParams({ ...(againJob.resolved_params || againJob.params) });
       setAgainJob(null);
-      setTab('创作');
+      setTab('สร้างสรรค์');
     }
   }, [againJob, workflows]);
 
@@ -1115,7 +1115,7 @@ export default function App() {
       setReferenceImages((curr) => [asset, ...curr.filter((item) => item.id !== asset.id)]);
       setSelectedAssets((curr) => [...new Set([...curr, asset.id])]);
     } catch (cause) {
-      if (currentProjectId.current === uploadProjectId) setError(`上传 ${file.name}：${apiMessage(cause)}`);
+      if (currentProjectId.current === uploadProjectId) setError(`อัปโหลด ${file.name}: ${apiMessage(cause)}`);
     } finally {
       if (currentProjectId.current === uploadProjectId) setUploadProgress((curr) => {
         const next = { ...curr };
@@ -1150,11 +1150,11 @@ export default function App() {
       };
       await createGpuJob(body, idempotencyKey.current);
       setConfirm(null);
-      setTab('任务');
+      setTab('งาน');
       idempotencyKey.current = '';
       await refreshJobs();
     } catch (cause) {
-      setError(`提交任务：${apiMessage(cause)}`);
+      setError(`ส่งงาน: ${apiMessage(cause)}`);
     } finally {
       setLoading('');
     }
@@ -1177,28 +1177,28 @@ export default function App() {
       const value = JSON.parse(raw) as unknown;
       const source = record(value) && record(value.workflow) ? value.workflow : value;
       if (!record(source) || !record(source.manifest) || !record(source.api_graph) || !record(source.object_info)) {
-        throw new Error('JSON 必须包含 manifest、api_graph、object_info');
+        throw new Error('JSON ต้องประกอบด้วย manifest, api_graph, object_info');
       }
       await action('import', async () => {
         const workflow = await importGpuWorkflow(value as never);
         setWorkflows((curr) => [workflow, ...curr.filter((item) => item.id !== workflow.id)]);
-        setError('工作流已作为草稿导入；请校验后发布。');
+        setError('นำเข้าเวิร์กโฟลว์เป็นฉบับร่างแล้ว กรุณาตรวจสอบก่อนเผยแพร่');
       });
     } catch (cause) {
-      setError(`导入失败：${apiMessage(cause)}`);
+      setError(`การนำเข้าล้มเหลว: ${apiMessage(cause)}`);
     }
   }
 
   async function reuseAsset(asset: GalleryAsset) {
     const sourceJobId = asset.source_job_id || asset.gpu_job_id;
     if (!sourceJobId) {
-      setError('该素材没有来源任务记录。');
+      setError('ไฟล์นี้ไม่มีบันทึกงานต้นฉบับ');
       return;
     }
     try {
       setAgainJob(await getGpuJob(sourceJobId));
     } catch (cause) {
-      setError(`再次生成：${apiMessage(cause)}`);
+      setError(`สร้างอีกครั้งล้มเหลว: ${apiMessage(cause)}`);
     }
   }
 
@@ -1217,7 +1217,7 @@ export default function App() {
       setGallery((curr) => curr.filter((i) => i.id !== asset.id));
       setViewer(null);
     } catch (cause) {
-      setError(`删除失败：${apiMessage(cause)}`);
+      setError(`ลบล้มเหลว: ${apiMessage(cause)}`);
     }
   }
 
@@ -1231,7 +1231,7 @@ export default function App() {
 
   function applyPreset(preset: GpuPreset) {
     if (preset.workflow_version_id !== workflowId) {
-      setError('预设版本不兼容。');
+      setError('เวอร์ชันพรีเซ็ตไม่เข้ากัน');
       return;
     }
     setParams({ ...params, ...preset.overrides });
@@ -1245,7 +1245,7 @@ export default function App() {
     await action('stop', async () => {
       await stopGpuCompute();
       setConfirm(null);
-      setError('已请求急停。');
+      setError('ส่งคำขอหยุดฉุกเฉินแล้ว');
     });
   }
 
@@ -1255,7 +1255,7 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* 磨砂顶栏 */}
+      {/* ส่วนหัว Topbar */}
       <header className="topbar">
         <div className="brand">
           Colab GPU Studio
@@ -1266,13 +1266,13 @@ export default function App() {
           type="button"
           onClick={() => setShowProjectSheet(true)}
         >
-          <span>📁 {activeProject ? activeProject.title : '选择项目'}</span>
+          <span>📁 {activeProject ? activeProject.title : 'เลือกโปรเจกต์'}</span>
           <small style={{ color: 'var(--muted)', marginLeft: '1vw' }}>▾</small>
         </button>
       </header>
 
-      {/* 导航栏：移动端吸底，电脑端在顶栏下方优雅排列 */}
-      <nav className="bottomNav" aria-label="工作区导航">
+      {/* แถบนำทาง: รองรับทั้งมือถือและคอมพิวเตอร์ */}
+      <nav className="bottomNav" aria-label="การนำทางในพื้นที่ทำงาน">
         {tabs.map((item) => {
           const isActive = tab === item;
           return (
@@ -1282,9 +1282,9 @@ export default function App() {
               aria-current={isActive ? 'page' : undefined}
               onClick={() => setTab(item)}
             >
-              <span>{item === '创作' ? '✦' : item === '任务' ? '⚡' : item === '作品' ? '🖼' : '⚙'}</span>
+              <span>{item === 'สร้างสรรค์' ? '✦' : item === 'งาน' ? '⚡' : item === 'ผลงาน' ? '🖼' : '⚙'}</span>
               <span>{item}</span>
-              {item === '任务' && activeJobsCount > 0 && (
+              {item === 'งาน' && activeJobsCount > 0 && (
                 <span className="tabBadge">{activeJobsCount}</span>
               )}
             </button>
@@ -1292,7 +1292,7 @@ export default function App() {
         })}
       </nav>
 
-      {/* 项目切换弹层 */}
+      {/* หน้าต่างเลือกหรือสลับโปรเจกต์ */}
       <ProjectSheet
         open={showProjectSheet}
         projects={projects}
@@ -1302,9 +1302,9 @@ export default function App() {
         onCreate={createLocalProject}
       />
 
-      {/* 主工作区 */}
+      {/* พื้นที่ทำงานหลัก */}
       <main className={styles.page}>
-        {tab === '创作' && (
+        {tab === 'สร้างสรรค์' && (
           <CreatePanel
             projectId={projectId}
             models={models}
@@ -1335,7 +1335,7 @@ export default function App() {
           />
         )}
 
-        {tab === '任务' && (
+        {tab === 'งาน' && (
           <TasksPanel
             jobs={jobs}
             error={jobError}
@@ -1353,7 +1353,7 @@ export default function App() {
           />
         )}
 
-        {tab === '作品' && (
+        {tab === 'ผลงาน' && (
           <GalleryPanel
             gallery={gallery}
             onFavorite={(asset) => void favorite(asset)}
@@ -1362,7 +1362,7 @@ export default function App() {
           />
         )}
 
-        {tab === '设置' && (
+        {tab === 'ตั้งค่า' && (
           <SettingsPanel
             settings={settings}
             usage={usage}
@@ -1401,73 +1401,73 @@ export default function App() {
         )}
       </main>
 
-      {/* 确认生成弹窗 */}
+      {/* หน้าต่างยืนยันการเริ่มสร้าง */}
       {confirm === 'submit' && activeWorkflow && (
         <div className={styles.dialogBackdrop} role="presentation" onClick={() => setConfirm(null)}>
           <section
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
-            aria-label="确认提交任务"
+            aria-label="ยืนยันการส่งงาน"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>确认开始生成</h2>
+            <h2>ยืนยันการเริ่มสร้าง</h2>
             <p>
-              工作流：<strong>{activeWorkflow.workflow_key} · v{activeWorkflow.workflow_version}</strong><br />
-              运行环境：<strong>{runtime === 'colab' ? 'Colab GPU' : '离线模拟'}</strong><br />
-              {runtime === 'colab' && <>最长限时：<strong>{maxRuntime} 分钟</strong></>}
+              เวิร์กโฟลว์: <strong>{activeWorkflow.workflow_key} · v{activeWorkflow.workflow_version}</strong><br />
+              สภาพแวดล้อม: <strong>{runtime === 'colab' ? 'Colab GPU' : 'จำลองออฟไลน์'}</strong><br />
+              {runtime === 'colab' && <>จำกัดเวลาสูงสุด: <strong>{maxRuntime} นาที</strong></>}
             </p>
             <div className="actions">
-              <button className="button secondary" type="button" onClick={() => setConfirm(null)}>取消</button>
+              <button className="button secondary" type="button" onClick={() => setConfirm(null)}>ยกเลิก</button>
               <button className="button" disabled={loading === 'submit'} type="button" onClick={() => void submitJob()}>
-                {loading === 'submit' ? '提交中…' : '确认启动'}
+                {loading === 'submit' ? 'กำลังส่ง…' : 'ยืนยันเริ่มทำงาน'}
               </button>
             </div>
           </section>
         </div>
       )}
 
-      {/* 确认急停弹窗 */}
+      {/* หน้าต่างยืนยันการหยุดฉุกเฉิน */}
       {confirm === 'stop' && (
         <div className={styles.dialogBackdrop} role="presentation" onClick={() => setConfirm(null)}>
           <section
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
-            aria-label="确认急停"
+            aria-label="ยืนยันการหยุดฉุกเฉิน"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>确认急停全部计算任务？</h2>
-            <p className="error">这会请求取消当前所有运行中任务并释放关联的 Colab GPU 运行时。</p>
+            <h2>ยืนยันการหยุดงานประมวลผลทั้งหมดฉุกเฉิน?</h2>
+            <p className="error">การดำเนินการนี้จะขอยกเลิกงานทั้งหมดที่กำลังทำงานอยู่และปล่อยคืน Colab GPU runtime ที่เกี่ยวข้อง</p>
             <div className="actions">
-              <button className="button secondary" type="button" onClick={() => setConfirm(null)}>取消</button>
-              <button className="button danger" type="button" onClick={() => void stopCompute()}>确认急停</button>
+              <button className="button secondary" type="button" onClick={() => setConfirm(null)}>ยกเลิก</button>
+              <button className="button danger" type="button" onClick={() => void stopCompute()}>ยืนยันหยุดฉุกเฉิน</button>
             </div>
           </section>
         </div>
       )}
 
-      {/* 任务详情抽屉 */}
+      {/* แผงรายละเอียดงาน */}
       {detail && (
         <div className={styles.dialogBackdrop} role="presentation" onClick={() => setDetail(null)}>
           <section
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
-            aria-label="任务详情"
+            aria-label="รายละเอียดงาน"
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.cardHead}>
-              <h2>任务详情 · {detail.id.slice(0, 8)}</h2>
-              <button className="button secondary" type="button" onClick={() => setDetail(null)}>关闭</button>
+              <h2>รายละเอียดงาน · {detail.id.slice(0, 8)}</h2>
+              <button className="button secondary" type="button" onClick={() => setDetail(null)}>ปิด</button>
             </div>
             <p>
-              状态：<strong>{readableState(detail.state)}</strong> · 环境：<strong>{detail.provider}</strong><br />
-              创建时间：{String(detail.created_at || '未知')}
+              สถานะ: <strong>{readableState(detail.state)}</strong> · สภาพแวดล้อม: <strong>{detail.provider}</strong><br />
+              เวลาที่สร้าง: {String(detail.created_at || 'ไม่ทราบ')}
             </p>
             {detail.timings ? (
               <details className="foldable" open>
-                <summary>阶段耗时记录</summary>
+                <summary>บันทึกเวลาแต่ละขั้นตอน</summary>
                 <div className="foldContent">
                   <pre className={styles.diagnostics}>{JSON.stringify(detail.timings, null, 2)}</pre>
                 </div>
@@ -1475,7 +1475,7 @@ export default function App() {
             ) : null}
             {detail.resolved_params ? (
               <details className="foldable">
-                <summary>参数快照</summary>
+                <summary>สแนปชอตพารามิเตอร์</summary>
                 <div className="foldContent">
                   <pre className={styles.diagnostics}>{JSON.stringify(detail.resolved_params, null, 2)}</pre>
                 </div>
@@ -1485,39 +1485,39 @@ export default function App() {
         </div>
       )}
 
-      {/* 作品查看器抽屉 */}
+      {/* ตัวดูและจัดการผลงาน */}
       {viewer && (
         <div className={styles.dialogBackdrop} role="presentation" onClick={() => setViewer(null)}>
           <section
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
-            aria-label="查看作品"
+            aria-label="ดูผลงาน"
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.cardHead}>
               <h2>{viewer.filename || viewer.id}</h2>
-              <button className="button secondary" type="button" onClick={() => setViewer(null)}>关闭</button>
+              <button className="button secondary" type="button" onClick={() => setViewer(null)}>ปิด</button>
             </div>
             {viewer.mime.startsWith('video/') ? (
               <video className={styles.viewerVideo} src={assetUrl(viewer)} controls autoPlay />
             ) : viewer.mime.startsWith('image/') ? (
               <img className={styles.viewerImage} src={assetUrl(viewer)} alt="" />
             ) : (
-              <p className="muted">诊断文件不可直接预览，请下载查看。</p>
+              <p className="muted">ไฟล์วินิจฉัยไม่สามารถดูตัวอย่างได้โดยตรง กรุณาดาวน์โหลดเพื่อเปิดดู</p>
             )}
             <div className="actions">
               <button className="button secondary" type="button" onClick={() => void favorite(viewer)}>
-                {viewer.favorite ? '取消收藏' : '收藏'}
+                {viewer.favorite ? 'เลิกถูกใจ' : 'ถูกใจ'}
               </button>
               <button className="button secondary" type="button" onClick={() => void reuseAsset(viewer)}>
-                以此参数再来一次
+                สร้างอีกครั้งด้วยพารามิเตอร์นี้
               </button>
               <a className="button secondary" href={assetUrl(viewer)} download={viewer.filename || viewer.id} target="_blank" rel="noreferrer">
-                下载产物
+                ดาวน์โหลดผลงาน
               </a>
               <button className="button danger" type="button" onClick={() => void remove(viewer)}>
-                删除作品
+                ลบผลงาน
               </button>
             </div>
           </section>

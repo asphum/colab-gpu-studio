@@ -75,7 +75,7 @@ a {
   position: relative;
 }
 
-/* 顶栏：磨砂微透光 */
+/* แถบด้านบน: เอฟเฟกต์กระจกฝ้าโปร่งแสง */
 .topbar {
   position: sticky;
   top: 0;
@@ -108,7 +108,7 @@ a {
   letter-spacing: normal;
 }
 
-/* 顶栏项目选择胶囊 */
+/* แคปซูลเลือกโปรเจกต์ที่แถบด้านบน */
 .projectChip {
   display: inline-flex;
   align-items: center;
@@ -140,7 +140,7 @@ a {
   white-space: nowrap;
 }
 
-/* 底部磨砂导航栏 */
+/* แถบนำทางด้านล่างแบบกระจกฝ้า */
 .bottomNav {
   position: fixed;
   z-index: 40;
@@ -205,7 +205,7 @@ a {
   box-shadow: 0 0 8px var(--accent);
 }
 
-/* 登录界面 */
+/* หน้าจอเข้าสู่ระบบ */
 .login {
   width: min(100%, 92vw);
   max-width: 460px;
@@ -251,7 +251,7 @@ a {
   background: var(--panel-strong);
 }
 
-/* 基础通用类 */
+/* คลาสสไตล์พื้นฐานทั่วไป */
 .muted {
   color: var(--muted);
 }
@@ -291,7 +291,7 @@ a {
   min-width: 12vw;
 }
 
-/* 按钮规范（圆角微磨砂） */
+/* สไตล์ปุ่มมาตรฐาน (มุมโค้งมนกระจกฝ้า) */
 .button {
   display: inline-flex;
   align-items: center;
@@ -344,7 +344,7 @@ a {
   background: var(--danger-soft);
 }
 
-/* 字段表单组件 */
+/* คอมโพเนนต์ฟอร์มกรอกข้อมูล */
 .field {
   display: grid;
   gap: 1.5vw;
@@ -468,7 +468,7 @@ a {
     font-size: 14px;
   }
 
-  /* 电脑端导航变为顶栏下方常驻标签栏，防止移动端 fixed 吸底遮挡长表单 */
+  /* ในคอมพิวเตอร์แถบนำทางจะอยู่ถัดจากแถบด้านบนเพื่อไม่ให้บังฟอร์มยาว */
   .bottomNav {
     position: static;
     width: 100%;
@@ -543,7 +543,7 @@ a {
   }
 }
 
-/* 折叠面板美化（功能收纳专用） */
+/* สไตล์แผงพับเปิด/ปิด (Accordion) */
 details.foldable {
   border: 1px solid var(--line);
   border-radius: 3.5vw;

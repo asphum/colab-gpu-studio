@@ -7,7 +7,9 @@ for (const symbol of ['unwrapGpuResponse', 'createGpuJob', 'getGpuWorkflowSchema
   if (!api.includes(symbol)) throw new Error(`missing GPU contract symbol: ${symbol}`);
 }
 const app = readFileSync('src/App.tsx', 'utf8');
-for (const marker of ['创作', '任务', '作品', '工作流', '设置', 'role="dialog"']) {
-  if (!app.includes(marker)) throw new Error(`missing business UI marker: ${marker}`);
+for (const markers of [['สร้างสรรค์', '创作'], ['งาน', '任务'], ['ผลงาน', '作品'], ['เวิร์กโฟลว์', '工作流'], ['ตั้งค่า', '设置'], ['role="dialog"']]) {
+  if (!markers.some((marker) => app.includes(marker))) {
+    throw new Error(`missing business UI marker: ${markers.join(' or ')}`);
+  }
 }
 console.log('standalone GPU contract markers present');

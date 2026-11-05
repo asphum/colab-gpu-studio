@@ -37,7 +37,7 @@ export function GpuParamForm({ manifest, values, assets, uploadProgress, onChang
   const advanced = parameters.filter((parameter) => parameter.advanced || parameter.group === 'advanced');
   const groups = useMemo(() => {
     const grouped = new Map<string, Array<{ parameter: GpuParameter; index: number }>>();
-    regular.forEach((parameter, index) => { const group = parameter.group || '参数'; const list = grouped.get(group) || []; list.push({ parameter, index }); grouped.set(group, list); });
+    regular.forEach((parameter, index) => { const group = parameter.group || 'พารามิเตอร์'; const list = grouped.get(group) || []; list.push({ parameter, index }); grouped.set(group, list); });
     return [...grouped.entries()];
   }, [regular]);
 
@@ -48,22 +48,22 @@ export function GpuParamForm({ manifest, values, assets, uploadProgress, onChang
     const options = (parameter.options || []).map(optionOf);
     const widget = parameter.widget || (parameter.type === 'text' ? 'textarea' : parameter.type === 'boolean' ? 'checkbox' : parameter.type === 'integer' || parameter.type === 'number' ? 'number' : parameter.type === 'image' || parameter.type === 'video' || parameter.type === 'file' ? 'file' : options.length ? 'select' : 'text');
     return <div className={styles.field} key={key}>
-      <label htmlFor={`gpu-${key}`}>{label}{parameter.required && <span aria-hidden="true"> · 必填</span>}</label>
+      <label htmlFor={`gpu-${key}`}>{label}{parameter.required && <span aria-hidden="true"> · จำเป็น</span>}</label>
       {parameter.description && <span className={styles.hint}>{parameter.description}</span>}
       {widget === 'textarea' ? <textarea id={`gpu-${key}`} value={String(current ?? '')} onChange={(event) => onChange(key, event.target.value)} />
-        : widget === 'select' ? <select id={`gpu-${key}`} value={String(current ?? '')} onChange={(event) => onChange(key, event.target.value)}><option value="">请选择</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-        : widget === 'checkbox' ? <label className={styles.checkbox}><input id={`gpu-${key}`} type="checkbox" checked={Boolean(current)} onChange={(event) => onChange(key, event.target.checked)} /><span>启用</span></label>
+        : widget === 'select' ? <select id={`gpu-${key}`} value={String(current ?? '')} onChange={(event) => onChange(key, event.target.value)}><option value="">กรุณาเลือก</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+        : widget === 'checkbox' ? <label className={styles.checkbox}><input id={`gpu-${key}`} type="checkbox" checked={Boolean(current)} onChange={(event) => onChange(key, event.target.checked)} /><span>เปิดใช้งาน</span></label>
         : widget === 'number' ? <input id={`gpu-${key}`} type="number" value={String(current ?? '')} min={parameter.min} max={parameter.max} step={parameter.step || (parameter.type === 'integer' ? 1 : 'any')} onChange={(event) => onChange(key, parameter.type === 'integer' ? (event.target.value === '' ? '' : Number.parseInt(event.target.value, 10)) : (event.target.value === '' ? '' : Number(event.target.value)))} />
-        : widget === 'file' ? <div className={styles.fileControl}><select id={`gpu-${key}`} value={String(current ?? '')} onChange={(event) => onChange(key, event.target.value)}><option value="">选择已上传素材</option>{assets.filter((asset) => !parameter.type || parameter.type === 'file' || asset.mime.startsWith(`${parameter.type}/`)).map((asset) => <option key={asset.id} value={asset.id}>{asset.filename || asset.id}</option>)}</select><button type="button" className="button secondary" onClick={() => inputRefs.current[key]?.click()}>上传素材</button><input ref={(node) => { inputRefs.current[key] = node; }} type="file" hidden accept={parameter.type === 'image' ? 'image/*' : parameter.type === 'video' ? 'video/*' : undefined} onChange={async (event) => { const file = event.target.files?.[0]; if (file) { await onUpload(file); } event.target.value = ''; }} />{Object.entries(uploadProgress).map(([name, progress]) => <small className={styles.hint} key={name}>上传 {name} · {progress}%</small>)}</div>
+        : widget === 'file' ? <div className={styles.fileControl}><select id={`gpu-${key}`} value={String(current ?? '')} onChange={(event) => onChange(key, event.target.value)}><option value="">เลือกไฟล์ที่อัปโหลดแล้ว</option>{assets.filter((asset) => !parameter.type || parameter.type === 'file' || asset.mime.startsWith(`${parameter.type}/`)).map((asset) => <option key={asset.id} value={asset.id}>{asset.filename || asset.id}</option>)}</select><button type="button" className="button secondary" onClick={() => inputRefs.current[key]?.click()}>อัปโหลดไฟล์</button><input ref={(node) => { inputRefs.current[key] = node; }} type="file" hidden accept={parameter.type === 'image' ? 'image/*' : parameter.type === 'video' ? 'video/*' : undefined} onChange={async (event) => { const file = event.target.files?.[0]; if (file) { await onUpload(file); } event.target.value = ''; }} />{Object.entries(uploadProgress).map(([name, progress]) => <small className={styles.hint} key={name}>กำลังอัปโหลด {name} · {progress}%</small>)}</div>
         : <input id={`gpu-${key}`} type="text" value={String(current ?? '')} onChange={(event) => onChange(key, event.target.value)} />}
-      {(parameter.min !== undefined || parameter.max !== undefined) && <span className={styles.hint}>范围：{parameter.min ?? '未知'} – {parameter.max ?? '未知'}</span>}
+      {(parameter.min !== undefined || parameter.max !== undefined) && <span className={styles.hint}>ช่วงค่า: {parameter.min ?? 'ไม่จำกัด'} – {parameter.max ?? 'ไม่จำกัด'}</span>}
     </div>;
   }
 
-  if (!manifest) return <div className="empty"><strong>尚未读取工作流参数</strong><span>选择可用工作流后，真实 manifest 会生成动态表单。</span></div>;
-  if (!parameters.length) return <div className="empty"><strong>此工作流没有可编辑参数</strong><span>请回到工作流标签检查 manifest。</span></div>;
+  if (!manifest) return <div className="empty"><strong>ยังไม่ได้โหลดพารามิเตอร์ของเวิร์กโฟลว์</strong><span>หลังจากเลือกเวิร์กโฟลว์แล้ว ฟอร์มจะถูกสร้างขึ้นอัตโนมัติตาม manifest</span></div>;
+  if (!parameters.length) return <div className="empty"><strong>เวิร์กโฟลว์นี้ไม่มีพารามิเตอร์ที่แก้ไขได้</strong><span>กรุณากลับไปที่แท็บเวิร์กโฟลว์เพื่อตรวจสอบ manifest</span></div>;
   return <div className={styles.form}>
     {groups.map(([group, fields]) => <section className={styles.group} key={group}><h3>{group}</h3>{fields.map(({ parameter, index }) => renderField(parameter, index))}</section>)}
-    {advanced.length > 0 && <details className={styles.advanced}><summary>高级参数（默认折叠）</summary>{advanced.map((parameter, index) => renderField(parameter, index + regular.length))}</details>}
+    {advanced.length > 0 && <details className={styles.advanced}><summary>พารามิเตอร์ขั้นสูง (ซ่อนไว้เป็นค่าเริ่มต้น)</summary>{advanced.map((parameter, index) => renderField(parameter, index + regular.length))}</details>}
   </div>;
 }

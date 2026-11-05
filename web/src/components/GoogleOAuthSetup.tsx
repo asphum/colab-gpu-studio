@@ -19,28 +19,28 @@ export function GoogleOAuthSetup({ onConfigured }: { onConfigured: () => void })
     try {
       const next = await saveGoogleClientConfig(webClient ? { client_json: webClient, confirmed: true } : { client_id: clientId.trim(), client_secret: clientSecret, confirmed: true });
       setConfig(next); setClientId(''); setClientSecret(''); setWebClient(null); setConfirmed(false);
-      setNotice('应用配置已加密保存。下一步点击“连接 Google Colab”和“连接 Google Drive”完成本人授权；不会自动开 GPU。');
+      setNotice('บันทึกการตั้งค่าแอปแบบเข้ารหัสเรียบร้อยแล้ว ขั้นตอนถัดไปให้คลิก "เชื่อมต่อ Google Colab" และ "เชื่อมต่อ Google Drive" เพื่อยืนยันสิทธิ์ของคุณเอง (ระบบจะไม่เปิด GPU อัตโนมัติ)');
       onConfigured();
     } catch (cause) { setError(apiMessage(cause)); } finally { setBusy(false); }
   }
-  return <section className={styles.card} aria-label="Google OAuth 应用配置"><h2>Google OAuth 应用配置</h2>
-    <p className="muted">{config?.configured ? '应用已配置。连接账户与启用 GPU 是另外两步。' : '尚未配置 Google 应用，因此现在不能直接跳转授权。你需要先创建自己的 OAuth 网页客户端。'}</p>
+  return <section className={styles.card} aria-label="การตั้งค่าแอป Google OAuth"><h2>การตั้งค่าแอป Google OAuth</h2>
+    <p className="muted">{config?.configured ? 'แอปได้รับการตั้งค่าแล้ว การเชื่อมต่อบัญชีและการเปิดใช้งาน GPU เป็นขั้นตอนถัดไป' : 'ยังไม่ได้ตั้งค่า Google App จึงยังไม่สามารถข้ามไปยืนยันสิทธิ์ได้ คุณจำเป็นต้องสร้าง OAuth Web Client ของตนเองก่อน'}</p>
     <ol className={styles.oauthSteps}>
-      <li>打开 <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud 控制台</a>，创建或选择自己的项目。</li>
-      <li>在“API 和服务 → 库”启用 Google Drive API，并按 Colab 官方文档启用 Colab API。</li>
-      <li>配置 Google Auth Platform：应用名称、受众选“外部”；测试模式把自己的 Google 邮箱加入测试用户。</li>
-      <li>在“客户端”创建 OAuth 客户端，类型选“Web 应用”，填入下方回调地址，下载客户端 JSON。</li>
-      <li>在这里导入 JSON 并保存，再点击下面两个 Google 连接按钮，使用有 Colab 权益的账户授权。</li>
+      <li>เปิด <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud Console</a> แล้วสร้างหรือเลือกโปรเจกต์ของคุณ</li>
+      <li>ในส่วน "APIs & Services → Library" ให้เปิดใช้งาน Google Drive API และเปิดใช้งาน Colab API ตามเอกสารทางการของ Colab</li>
+      <li>ตั้งค่า Google Auth Platform: ใส่ชื่อแอป, เลือกกลุ่มเป้าหมายเป็น "ภายนอก (External)" หากอยู่ในโหมดทดสอบ ให้เพิ่มอีเมล Google ของคุณใน Test Users</li>
+      <li>ในส่วน "Credentials" สร้าง OAuth client ID เลือกประเภท "Web application" ใส่ Callback URL ด้านล่าง แล้วดาวน์โหลดไฟล์ Client JSON</li>
+      <li>นำเข้าไฟล์ JSON ที่นี่และบันทึก จากนั้นคลิกปุ่มเชื่อมต่อ Google ทั้งสองปุ่มด้านล่าง โดยใช้บัญชีที่มีสิทธิ์ใช้งาน Colab ในการอนุญาต</li>
     </ol>
-    <label className="field">授权回调地址<input aria-label="Google OAuth 回调地址" readOnly value={callback} onFocus={(event) => event.target.select()} /></label>
-    <button className="button secondary" type="button" onClick={async () => { try { await navigator.clipboard.writeText(callback); setNotice('已复制回调地址'); } catch { setNotice('请点击回调地址输入框，全选后复制'); } }}>复制回调地址</button>
-    <details><summary>需要的 OAuth 权限</summary><p className="muted">在 Google Auth Platform 的“数据访问权限”中添加下列 scopes；正式连接时也会由本站申请。测试模式仅允许你加入的测试用户授权。</p><code className={styles.oauthScope}>https://www.googleapis.com/auth/colaboratory</code><code className={styles.oauthScope}>https://www.googleapis.com/auth/drive.file</code></details>
-    <p className="muted">如填写“已获授权的 JavaScript 来源”，使用 {window.location.origin}。授权不会产生 GPU 费用；不要把客户端 JSON 或 Secret 发到群里。</p>
-    <details><summary>导入 / 更换 OAuth 客户端</summary><div className={styles.stack}>
-      <label className="button secondary">选择 Google 客户端 JSON<input data-testid="google-client-file" hidden type="file" accept="application/json,.json" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { if (file.size > 65536) throw new Error('客户端 JSON 文件过大'); const value: unknown = JSON.parse(await file.text()); if (!value || typeof value !== 'object' || !('web' in value)) throw new Error('请选择 Web 应用客户端 JSON，不是桌面客户端或服务账号密钥'); setWebClient(value as Record<string, unknown>); setClientId(''); setClientSecret(''); setNotice('已读取文件，尚未保存'); setError(''); } catch (cause) { setWebClient(null); setError(apiMessage(cause)); } }} /></label>
-      {!webClient && <><label className="field">或手动填写 Client ID<input autoComplete="off" autoCapitalize="none" spellCheck={false} value={clientId} onChange={(event) => setClientId(event.target.value)} /></label><label className="field">Client Secret<input type="password" autoComplete="new-password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} /></label></>}
-      <label className={styles.oauthConfirm}><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>这是我自己的 Google 应用，确认加密保存到本站后端。</span></label>
-      <button className="button" type="button" disabled={busy || !confirmed || (!webClient && (!clientId || !clientSecret))} onClick={() => void save()}>{busy ? '保存中…' : '保存 OAuth 应用配置'}</button>
+    <label className="field">Callback URL สำหรับยืนยันสิทธิ์<input aria-label="Google OAuth Callback URL" readOnly value={callback} onFocus={(event) => event.target.select()} /></label>
+    <button className="button secondary" type="button" onClick={async () => { try { await navigator.clipboard.writeText(callback); setNotice('คัดลอก Callback URL แล้ว'); } catch { setNotice('กรุณาคลิกที่กล่อง Callback URL แล้วเลือกทั้งหมดเพื่อคัดลอก'); } }}>คัดลอก Callback URL</button>
+    <details><summary>สิทธิ์ OAuth (Scopes) ที่จำเป็น</summary><p className="muted">เพิ่ม scopes ต่อไปนี้ใน "Data Access / Scopes" ของ Google Auth Platform ระบบจะขอสิทธิ์เหล่านี้เมื่อเชื่อมต่อ ในโหมดทดสอบจะอนุญาตเฉพาะผู้ใช้ในรายชื่อ Test Users เท่านั้น</p><code className={styles.oauthScope}>https://www.googleapis.com/auth/colaboratory</code><code className={styles.oauthScope}>https://www.googleapis.com/auth/drive.file</code></details>
+    <p className="muted">หากต้องระบุ "Authorized JavaScript origins" ให้ใช้ {window.location.origin} การยืนยันสิทธิ์จะไม่ทำให้เกิดค่าใช้จ่าย GPU และห้ามส่งไฟล์ JSON หรือ Client Secret ไปยังที่สาธารณะ</p>
+    <details><summary>นำเข้า / เปลี่ยนแปลง OAuth Client</summary><div className={styles.stack}>
+      <label className="button secondary">เลือกไฟล์ Google Client JSON<input data-testid="google-client-file" hidden type="file" accept="application/json,.json" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { if (file.size > 65536) throw new Error('ไฟล์ Client JSON มีขนาดใหญ่เกินไป'); const value: unknown = JSON.parse(await file.text()); if (!value || typeof value !== 'object' || !('web' in value)) throw new Error('กรุณาเลือกไฟล์ JSON ของ Web Application Client ไม่ใช่ Desktop Client หรือ Service Account Key'); setWebClient(value as Record<string, unknown>); setClientId(''); setClientSecret(''); setNotice('อ่านไฟล์แล้ว แต่ยังไม่ได้บันทึก'); setError(''); } catch (cause) { setWebClient(null); setError(apiMessage(cause)); } }} /></label>
+      {!webClient && <><label className="field">หรือกรอก Client ID ด้วยตนเอง<input autoComplete="off" autoCapitalize="none" spellCheck={false} value={clientId} onChange={(event) => setClientId(event.target.value)} /></label><label className="field">Client Secret<input type="password" autoComplete="new-password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} /></label></>}
+      <label className={styles.oauthConfirm}><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>นี่คือ Google App ของฉันเอง ยืนยันให้บันทึกแบบเข้ารหัสไปยังเซิร์ฟเวอร์</span></label>
+      <button className="button" type="button" disabled={busy || !confirmed || (!webClient && (!clientId || !clientSecret))} onClick={() => void save()}>{busy ? 'กำลังบันทึก…' : 'บันทึกการตั้งค่า OAuth App'}</button>
     </div></details>
     {error && <p className="status error" role="alert">{error}</p>}{notice && <p className="status" role="status">{notice}</p>}
   </section>;

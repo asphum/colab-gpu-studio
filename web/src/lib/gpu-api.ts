@@ -35,7 +35,7 @@ export function unwrapGpuResponse<T>(value: ApiEnvelope<T> | T): T {
   const envelope = value as ApiEnvelope<T>;
   if (envelope.error) {
     const error = typeof envelope.error === 'string' ? { message: envelope.error } : envelope.error;
-    throw new ApiError(error.message || 'GPU 服务请求失败', 200, error.code || 'GPU_API_ERROR', envelope.request_id, error.detail);
+    throw new ApiError(error.message || 'คำขอบริการ GPU ล้มเหลว', 200, error.code || 'GPU_API_ERROR', envelope.request_id, error.detail);
   }
   return envelope.data as T;
 }
@@ -53,7 +53,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   try {
     response = await fetch(`${API_BASE}${path}`, { ...init, headers, credentials: 'include', signal: controller.signal });
   } catch (cause) {
-    if (controller.signal.aborted) throw new ApiError(init.signal?.aborted ? '请求已取消' : '请求超时或网络中断，请刷新后再试', 0, 'NETWORK_TIMEOUT');
+    if (controller.signal.aborted) throw new ApiError(init.signal?.aborted ? 'ยกเลิกคำขอแล้ว' : 'คำขอหมดเวลาหรือการเชื่อมต่อเครือข่ายขัดข้อง กรุณารีเฟรชแล้วลองใหม่อีกครั้ง', 0, 'NETWORK_TIMEOUT');
     throw cause;
   } finally {
     window.clearTimeout(timeout);
@@ -66,16 +66,16 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     const data = isRecord(body) ? body : {};
     const error = isRecord(data.error) ? data.error : data;
     if (response.status === 401) logout();
-    throw new ApiError(String(error.message || `请求失败（${response.status}）`), response.status, String(error.code || 'HTTP_ERROR'), typeof data.request_id === 'string' ? data.request_id : undefined, error.detail);
+    throw new ApiError(String(error.message || `คำขอล้มเหลว (${response.status})`), response.status, String(error.code || 'HTTP_ERROR'), typeof data.request_id === 'string' ? data.request_id : undefined, error.detail);
   }
   return unwrapGpuResponse<T>(body as ApiEnvelope<T> | T);
 }
 const post = (body: unknown): RequestInit => ({ method: 'POST', body: JSON.stringify(body) });
-export function apiMessage(error: unknown): string { return error instanceof Error ? error.message : '网络连接失败，请稍后重试'; }
+export function apiMessage(error: unknown): string { return error instanceof Error ? error.message : 'การเชื่อมต่อเครือข่ายล้มเหลว กรุณาลองใหม่อีกครั้งในภายหลัง'; }
 
 export async function login(password: string): Promise<string> {
   const result = await apiFetch<{ access_token?: string }>('/api/auth/login', post({ password }));
-  if (!result.access_token) throw new ApiError('登录响应没有本站 access_token');
+  if (!result.access_token) throw new ApiError('การตอบกลับจากการเข้าสู่ระบบไม่มี access_token');
   sessionStorage.setItem(TOKEN_KEY, result.access_token);
   return result.access_token;
 }
@@ -104,7 +104,7 @@ export const getGpuSettings = () => apiFetch<GpuSettings>('/api/gpu/settings');
 export const getGpuComputeSpecs = (provider: Provider) => apiFetch<ComputeSpec[]>(`/api/gpu/compute/specs?provider=${encodeURIComponent(provider)}`);
 export async function startGoogleAuth(purpose: 'drive' | 'colab'): Promise<string> {
   const result = await apiFetch<{ authorization_url?: string }>('/api/gpu/auth/google/start', post({ purpose }));
-  if (!result.authorization_url) throw new ApiError('Google OAuth 响应没有 authorization_url');
+  if (!result.authorization_url) throw new ApiError('การตอบกลับจาก Google OAuth ไม่มี authorization_url');
   return result.authorization_url;
 }
 export const disconnectGoogle = (purpose: 'drive' | 'colab') => apiFetch<Record<string, unknown>>('/api/gpu/auth/google/disconnect', post({ purpose }));
@@ -118,8 +118,8 @@ export async function uploadAsset(projectId: string, file: File, onProgress?: (p
     const xhr = new XMLHttpRequest(); xhr.open('POST', `${API_BASE}/api/assets`); xhr.withCredentials = true;
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.upload.onprogress = (event) => { if (event.lengthComputable) onProgress?.(Math.round(event.loaded / event.total * 100)); };
-    xhr.onload = () => { let data: unknown; try { data = JSON.parse(xhr.responseText); } catch { reject(new ApiError('上传服务响应异常')); return; } if (xhr.status >= 200 && xhr.status < 300) { try { resolve(unwrapGpuResponse<GalleryAsset>(data as ApiEnvelope<GalleryAsset> | GalleryAsset)); } catch (error) { reject(error); } } else reject(new ApiError('素材上传失败', xhr.status)); };
-    xhr.onerror = () => reject(new ApiError('网络中断，请检查素材列表后重试'));
+    xhr.onload = () => { let data: unknown; try { data = JSON.parse(xhr.responseText); } catch { reject(new ApiError('การตอบกลับจากบริการอัปโหลดผิดปกติ')); return; } if (xhr.status >= 200 && xhr.status < 300) { try { resolve(unwrapGpuResponse<GalleryAsset>(data as ApiEnvelope<GalleryAsset> | GalleryAsset)); } catch (error) { reject(error); } } else reject(new ApiError('การอัปโหลดไฟล์ล้มเหลว', xhr.status)); };
+    xhr.onerror = () => reject(new ApiError('การเชื่อมต่อเครือข่ายขัดข้อง กรุณาตรวจสอบรายการไฟล์แล้วลองใหม่อีกครั้ง'));
     xhr.send(body);
   });
 }
