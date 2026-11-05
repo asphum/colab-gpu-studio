@@ -23,7 +23,7 @@ export function GoogleOAuthSetup({ onConfigured }: { onConfigured: () => void })
       onConfigured();
     } catch (cause) { setError(apiMessage(cause)); } finally { setBusy(false); }
   }
-  return <section className={styles.card} aria-label="การตั้งค่าแอป Google OAuth"><h2>การตั้งค่าแอป Google OAuth</h2>
+  return <div className={styles.stack} aria-label="การตั้งค่าแอป Google OAuth">
     <p className="muted">{config?.configured ? 'แอปได้รับการตั้งค่าแล้ว การเชื่อมต่อบัญชีและการเปิดใช้งาน GPU เป็นขั้นตอนถัดไป' : 'ยังไม่ได้ตั้งค่า Google App จึงยังไม่สามารถข้ามไปยืนยันสิทธิ์ได้ คุณจำเป็นต้องสร้าง OAuth Web Client ของตนเองก่อน'}</p>
     <ol className={styles.oauthSteps}>
       <li>เปิด <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud Console</a> แล้วสร้างหรือเลือกโปรเจกต์ของคุณ</li>
@@ -34,14 +34,14 @@ export function GoogleOAuthSetup({ onConfigured }: { onConfigured: () => void })
     </ol>
     <label className="field">Callback URL สำหรับยืนยันสิทธิ์<input aria-label="Google OAuth Callback URL" readOnly value={callback} onFocus={(event) => event.target.select()} /></label>
     <button className="button secondary" type="button" onClick={async () => { try { await navigator.clipboard.writeText(callback); setNotice('คัดลอก Callback URL แล้ว'); } catch { setNotice('กรุณาคลิกที่กล่อง Callback URL แล้วเลือกทั้งหมดเพื่อคัดลอก'); } }}>คัดลอก Callback URL</button>
-    <details><summary>สิทธิ์ OAuth (Scopes) ที่จำเป็น</summary><p className="muted">เพิ่ม scopes ต่อไปนี้ใน "Data Access / Scopes" ของ Google Auth Platform ระบบจะขอสิทธิ์เหล่านี้เมื่อเชื่อมต่อ ในโหมดทดสอบจะอนุญาตเฉพาะผู้ใช้ในรายชื่อ Test Users เท่านั้น</p><code className={styles.oauthScope}>https://www.googleapis.com/auth/colaboratory</code><code className={styles.oauthScope}>https://www.googleapis.com/auth/drive.file</code></details>
+    <details className="foldable"><summary>สิทธิ์ OAuth (Scopes) ที่จำเป็น</summary><div className="foldContent"><p className="muted">เพิ่ม scopes ต่อไปนี้ใน "Data Access / Scopes" ของ Google Auth Platform ระบบจะขอสิทธิ์เหล่านี้เมื่อเชื่อมต่อ ในโหมดทดสอบจะอนุญาตเฉพาะผู้ใช้ในรายชื่อ Test Users เท่านั้น</p><code className={styles.oauthScope}>https://www.googleapis.com/auth/colaboratory</code><code className={styles.oauthScope}>https://www.googleapis.com/auth/drive.file</code></div></details>
     <p className="muted">หากต้องระบุ "Authorized JavaScript origins" ให้ใช้ {window.location.origin} การยืนยันสิทธิ์จะไม่ทำให้เกิดค่าใช้จ่าย GPU และห้ามส่งไฟล์ JSON หรือ Client Secret ไปยังที่สาธารณะ</p>
-    <details><summary>นำเข้า / เปลี่ยนแปลง OAuth Client</summary><div className={styles.stack}>
+    <details className="foldable"><summary>นำเข้า / เปลี่ยนแปลง OAuth Client</summary><div className="foldContent"><div className={styles.stack}>
       <label className="button secondary">เลือกไฟล์ Google Client JSON<input data-testid="google-client-file" hidden type="file" accept="application/json,.json" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { if (file.size > 65536) throw new Error('ไฟล์ Client JSON มีขนาดใหญ่เกินไป'); const value: unknown = JSON.parse(await file.text()); if (!value || typeof value !== 'object' || !('web' in value)) throw new Error('กรุณาเลือกไฟล์ JSON ของ Web Application Client ไม่ใช่ Desktop Client หรือ Service Account Key'); setWebClient(value as Record<string, unknown>); setClientId(''); setClientSecret(''); setNotice('อ่านไฟล์แล้ว แต่ยังไม่ได้บันทึก'); setError(''); } catch (cause) { setWebClient(null); setError(apiMessage(cause)); } }} /></label>
       {!webClient && <><label className="field">หรือกรอก Client ID ด้วยตนเอง<input autoComplete="off" autoCapitalize="none" spellCheck={false} value={clientId} onChange={(event) => setClientId(event.target.value)} /></label><label className="field">Client Secret<input type="password" autoComplete="new-password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} /></label></>}
       <label className={styles.oauthConfirm}><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>นี่คือ Google App ของฉันเอง ยืนยันให้บันทึกแบบเข้ารหัสไปยังเซิร์ฟเวอร์</span></label>
       <button className="button" type="button" disabled={busy || !confirmed || (!webClient && (!clientId || !clientSecret))} onClick={() => void save()}>{busy ? 'กำลังบันทึก…' : 'บันทึกการตั้งค่า OAuth App'}</button>
-    </div></details>
+    </div></div></details>
     {error && <p className="status error" role="alert">{error}</p>}{notice && <p className="status" role="status">{notice}</p>}
-  </section>;
+  </div>;
 }

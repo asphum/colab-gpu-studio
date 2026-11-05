@@ -1,65 +1,75 @@
 /* Page & Container */
 .page {
-  width: min(100%, 580px);
+  width: 100%;
   margin: 0 auto;
-  padding: 3vw 4vw;
+  padding: 12px 0;
   display: grid;
-  gap: 4vw;
+  gap: 16px;
   align-content: start;
 }
 
 .stack {
   display: grid;
-  gap: 4vw;
+  gap: 16px;
 }
 
 /* การ์ดแก้วฝ้าหลัก (Frosted Glass Card) */
 .card {
   display: grid;
-  gap: 3.5vw;
+  gap: 14px;
   min-width: 0;
-  padding: 5vw;
-  border-radius: 4.5vw;
+  padding: 16px;
+  border-radius: 16px;
   background: var(--panel);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--line);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
 }
 
 .cardHead {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 3vw;
+  gap: 12px;
 }
 
-.cardHead h2 {
+.cardHead h2,
+.sectionTitle h2 {
   margin: 0;
-  font-size: clamp(4.6vw, 1.2vw + 1vh, 5.4vw);
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+.cardSub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 3px 0 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .sectionTitle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3vw;
-}
-
-.sectionTitle h2 {
-  margin: 0;
-  font-size: clamp(4.6vw, 1.2vw + 1vh, 5.4vw);
-  font-weight: 700;
+  gap: 12px;
 }
 
 /* การเลือกการ์ดเวิร์กโฟลว์ */
 .workflowCard {
   display: grid;
-  gap: 2.5vw;
-  padding: 4vw;
-  border-radius: 3.5vw;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
   border: 1px solid var(--line);
   background: var(--panel-strong);
   transition: border-color 0.15s, background-color 0.15s;
@@ -73,21 +83,92 @@
 .workflowHeader {
   display: flex;
   justify-content: space-between;
-  gap: 2vw;
+  gap: 10px;
   align-items: flex-start;
 }
 
+.workflowTitleBlock {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .workflowHeader strong {
-  font-size: clamp(3.6vw, 0.9vw + 0.5vh, 4.2vw);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+.workflowSub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.disabledModelRow {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.versionSelect {
+  width: auto;
+  min-height: 30px;
+  padding: 3px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-strong);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.presetDropdownWrapper {
+  position: relative;
+}
+
+.presetDropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: min(340px, 90vw);
+  background: rgba(20, 28, 26, 0.96);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 14px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: grid;
+  gap: 12px;
+}
+
+.buttonGroup2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.submitButton {
+  width: 100%;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 /* แถบพรีเซ็ตพารามิเตอร์ */
 .presetBox {
   display: grid;
-  gap: 2.5vw;
-  padding: 3.5vw;
-  border-radius: 3vw;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--line);
 }
@@ -96,36 +177,37 @@
 .statGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2.5vw;
+  gap: 10px;
 }
 
 .stat {
   display: grid;
-  gap: 1vw;
-  padding: 3.5vw;
+  gap: 4px;
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 3vw;
+  border-radius: 12px;
   background: var(--panel-strong);
 }
 
 .stat span {
-  font-size: clamp(2.8vw, 0.7vw + 0.3vh, 3.2vw);
+  font-size: 12px;
   color: var(--muted);
 }
 
 .stat strong {
-  font-size: clamp(5.5vw, 1.5vw + 1vh, 7vw);
+  font-size: 19px;
   color: var(--text);
   font-weight: 800;
+  line-height: 1.2;
 }
 
 /* การ์ดงาน */
 .job {
   display: grid;
-  gap: 2.5vw;
-  padding: 4vw;
+  gap: 10px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 3.5vw;
+  border-radius: 14px;
   background: var(--panel-strong);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -134,27 +216,27 @@
 .jobHeader {
   display: flex;
   justify-content: space-between;
-  gap: 2vw;
+  gap: 10px;
   align-items: center;
 }
 
 .jobHeader strong {
-  font-size: clamp(3.6vw, 0.9vw + 0.5vh, 4.2vw);
+  font-size: 14.5px;
   overflow-wrap: anywhere;
 }
 
 .jobMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 2vw 4vw;
+  gap: 6px 16px;
   color: var(--muted);
-  font-size: clamp(2.8vw, 0.7vw + 0.3vh, 3.4vw);
+  font-size: 12.5px;
 }
 
 .progress {
-  height: 2vw;
+  height: 6px;
   overflow: hidden;
-  border-radius: 99vw;
+  border-radius: 9999px;
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -162,7 +244,7 @@
   display: block;
   height: 100%;
   background: linear-gradient(90deg, #69c7a8 0%, #9fe3b0 100%);
-  border-radius: 99vw;
+  border-radius: 9999px;
   transition: width 0.3s ease;
 }
 
@@ -170,14 +252,14 @@
 .assetGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3vw;
+  gap: 10px;
 }
 
 .asset {
   overflow: hidden;
   min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 3.5vw;
+  border-radius: 12px;
   background: var(--panel-strong);
   display: flex;
   flex-direction: column;
@@ -208,25 +290,39 @@
   background: #000;
   font-weight: 800;
   text-align: center;
+  font-size: 13px;
 }
 
 .diagnosticsThumb small {
   color: var(--muted);
   font-weight: 500;
+  font-size: 11px;
 }
 
 .asset footer {
   display: grid;
-  gap: 1.5vw;
-  padding: 3vw;
+  gap: 6px;
+  padding: 10px;
 }
 
 .assetName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: clamp(2.8vw, 0.7vw + 0.3vh, 3.4vw);
+  font-size: 12px;
   font-weight: 600;
+}
+
+.assetActions {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.assetActions button {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
 /* หน้าต่างป๊อปอัป / ไดอะล็อก */
@@ -244,16 +340,16 @@
 }
 
 .dialog {
-  width: min(100%, 580px);
+  width: 100%;
   max-height: 85vh;
   overflow-y: auto;
   display: grid;
-  gap: 4vw;
-  padding: 6vw 5vw 8vw;
+  gap: 14px;
+  padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
   border: 1px solid var(--line-strong);
-  border-radius: 6vw 6vw 0 0;
+  border-radius: 20px 20px 0 0;
   color: var(--text);
-  background: rgba(18, 25, 23, 0.95);
+  background: rgba(18, 25, 23, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
@@ -262,17 +358,22 @@
 
 .dialog h2 {
   margin: 0;
-  font-size: clamp(5vw, 1.5vw + 1vh, 6vw);
+  font-size: 18px;
+}
+
+.dialogContent {
+  display: grid;
+  gap: 12px;
 }
 
 .code {
-  min-height: 32vw;
-  border-radius: 3vw;
+  min-height: 120px;
+  border-radius: 10px;
   border: 1px solid var(--line);
-  padding: 3vw;
+  padding: 12px;
   background: #050a09;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: clamp(2.8vw, 0.7vw + 0.3vh, 3.4vw);
+  font-size: 12.5px;
 }
 
 .viewerImage, .viewerVideo {
@@ -280,101 +381,105 @@
   max-height: 60vh;
   object-fit: contain;
   background: #000;
-  border-radius: 3vw;
+  border-radius: 12px;
 }
 
 .diagnostics {
   max-height: 50vh;
   overflow: auto;
   margin: 0;
-  padding: 3vw;
-  border-radius: 3vw;
+  padding: 12px;
+  border-radius: 10px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   color: var(--text);
   background: rgba(0, 0, 0, 0.35);
-  font-size: clamp(2.8vw, 0.7vw + 0.3vh, 3.2vw);
+  font-size: 12.5px;
 }
 
 .toggle {
   display: flex;
   align-items: center;
-  gap: 2.5vw;
-  min-height: 12vw;
+  gap: 10px;
+  min-height: 38px;
   color: var(--text);
   font-weight: 500;
+  font-size: 13.5px;
 }
 
 .toggle input {
-  width: 6vw;
-  height: 6vw;
+  width: 18px;
+  height: 18px;
   accent-color: var(--accent);
 }
 
 /* การปรับสไตล์คอมโพเนนต์โปรเจกต์และไฟล์ */
 .projectBar {
   display: grid;
-  gap: 3vw;
-  padding: 4vw;
+  gap: 10px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 4vw;
+  border-radius: 14px;
   background: var(--panel);
 }
 
 .projectRow {
   display: flex;
   align-items: center;
-  gap: 2.5vw;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .projectRow select {
-  flex: 1 1 45vw;
-  min-height: 12vw;
+  flex: 1 1 200px;
+  min-height: 38px;
   min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 3vw;
-  padding: 2vw;
+  border-radius: 10px;
+  padding: 8px 12px;
   color: var(--text);
   background: var(--panel-strong);
+  font-size: 13.5px;
 }
 
 .referencePicker {
   display: grid;
-  gap: 2.5vw;
+  gap: 10px;
   min-width: 0;
 }
 
 .referenceList {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 2vw;
+  gap: 8px;
 }
 
 label.referenceRow {
   display: grid;
-  grid-template-columns: 5vw 16vw minmax(0, 1fr);
+  grid-template-columns: 20px 52px minmax(0, 1fr);
   align-items: center;
-  gap: 3vw;
-  padding: 2.5vw 3vw;
-  min-height: 20vw;
+  gap: 10px;
+  padding: 8px 12px;
+  min-height: 64px;
   border: 1px solid var(--line);
-  border-radius: 3vw;
+  border-radius: 10px;
   background: var(--panel-strong);
+  cursor: pointer;
 }
 
 label.referenceRow input[type='checkbox'], label.oauthConfirm input[type='checkbox'] {
-  width: 5vw;
-  height: 5vw;
+  width: 18px;
+  height: 18px;
   accent-color: var(--accent);
   justify-self: center;
+  cursor: pointer;
 }
 
 .referenceRow img, .referenceMedia {
-  width: 16vw;
-  height: 16vw;
+  width: 52px;
+  height: 52px;
   object-fit: cover;
-  border-radius: 2vw;
+  border-radius: 8px;
   background: #000;
 }
 
@@ -382,77 +487,96 @@ label.referenceRow input[type='checkbox'], label.oauthConfirm input[type='checkb
   display: grid;
   place-items: center;
   font-weight: 700;
+  font-size: 12px;
   color: var(--accent);
 }
 
 .referenceName {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: clamp(2.8vw, 0.7vw + 0.3vh, 3.4vw);
+  font-size: 13px;
 }
 
 .oauthSteps {
   margin: 0;
-  padding-left: 5vw;
+  padding-left: 20px;
   display: grid;
-  gap: 2vw;
+  gap: 8px;
   overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .oauthConfirm {
   display: grid;
-  grid-template-columns: 5vw minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 3vw;
-  min-height: 12vw;
+  gap: 10px;
+  min-height: 38px;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .oauthScope {
   display: block;
   max-width: 100%;
   overflow-wrap: anywhere;
-  margin-top: 1.5vw;
-  padding: 1.5vw 2.5vw;
-  border-radius: 1.5vw;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.4);
-  font-size: 2.8vw;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
+/* Tablet & Desktop Layout */
 @media (min-width: 768px) {
   .page {
     width: 100%;
     padding: 0;
-    gap: 24px;
+    gap: 20px;
   }
 
   .stack {
-    gap: 24px;
+    gap: 20px;
   }
 
   .card {
-    padding: 28px;
-    border-radius: 20px;
-    gap: 20px;
+    padding: 22px 24px;
+    border-radius: 18px;
+    gap: 18px;
   }
 
   .cardHead h2,
   .sectionTitle h2 {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .cardSub {
+    font-size: 13px;
   }
 
   .workflowCard {
-    padding: 20px;
-    border-radius: 16px;
+    padding: 16px 18px;
+    border-radius: 14px;
     gap: 12px;
   }
 
   .workflowHeader strong {
-    font-size: 16px;
+    font-size: 15.5px;
+  }
+
+  .workflowSub {
+    font-size: 13px;
+  }
+
+  .disabledModelRow {
+    font-size: 13px;
   }
 
   .statGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
+    gap: 14px;
   }
 
   .stat {
@@ -462,21 +586,21 @@ label.referenceRow input[type='checkbox'], label.oauthConfirm input[type='checkb
   }
 
   .stat span {
-    font-size: 13px;
+    font-size: 12.5px;
   }
 
   .stat strong {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .job {
-    padding: 20px;
+    padding: 18px 20px;
     border-radius: 16px;
     gap: 12px;
   }
 
   .jobHeader strong {
-    font-size: 16px;
+    font-size: 15.5px;
   }
 
   .jobMeta {
@@ -485,20 +609,20 @@ label.referenceRow input[type='checkbox'], label.oauthConfirm input[type='checkb
   }
 
   .progress {
-    height: 8px;
+    height: 7px;
   }
 
   .assetGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
+    gap: 14px;
   }
 
   .asset {
-    border-radius: 16px;
+    border-radius: 14px;
   }
 
   .asset footer {
-    padding: 14px;
+    padding: 12px;
     gap: 8px;
   }
 
@@ -506,62 +630,58 @@ label.referenceRow input[type='checkbox'], label.oauthConfirm input[type='checkb
     font-size: 13px;
   }
 
+  .dialogBackdrop {
+    place-items: center;
+    padding: 20px;
+  }
+
   .dialog {
     width: 560px;
-    border-radius: 24px;
-    padding: 32px;
-    gap: 20px;
+    border-radius: 20px;
+    padding: 28px;
+    gap: 18px;
+    animation: fadeIn 0.15s ease-out;
   }
 
   .dialog h2 {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .code {
-    min-height: 180px;
+    min-height: 160px;
     border-radius: 12px;
     font-size: 13px;
-    padding: 16px;
+    padding: 14px;
   }
 
   .diagnostics {
     font-size: 13px;
-    padding: 16px;
+    padding: 14px;
     border-radius: 12px;
   }
 
   .toggle {
-    min-height: 44px;
+    min-height: 40px;
     gap: 12px;
-  }
-
-  .toggle input {
-    width: 20px;
-    height: 20px;
   }
 
   .referenceList {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
   }
 
   label.referenceRow {
-    grid-template-columns: 20px 64px minmax(0, 1fr);
-    padding: 12px 16px;
-    min-height: 88px;
-    border-radius: 14px;
-    gap: 14px;
+    grid-template-columns: 20px 56px minmax(0, 1fr);
+    padding: 10px 14px;
+    min-height: 72px;
+    border-radius: 12px;
+    gap: 12px;
   }
 
   .referenceRow img, .referenceMedia {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     border-radius: 10px;
-  }
-
-  label.referenceRow input[type='checkbox'] {
-    width: 20px;
-    height: 20px;
   }
 }
 

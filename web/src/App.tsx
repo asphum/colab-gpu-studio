@@ -105,8 +105,10 @@ function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
   return (
     <main className="login">
       <form className="loginCard" onSubmit={submit}>
-        <h1>Colab GPU Studio</h1>
-        <p className="muted">ใส่รหัสผ่านเพื่อเข้าสู่สตูดิโอส่วนตัว</p>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '24px' }}>Colab GPU Studio</h1>
+          <p className={styles.cardSub} style={{ margin: '4px 0 0' }}>ใส่รหัสผ่านเพื่อเข้าสู่สตูดิโอส่วนตัว</p>
+        </div>
         <label>
           รหัสผ่านการเข้าถึง
           <input
@@ -120,7 +122,7 @@ function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
           />
         </label>
         {error && <p className="status error" role="alert">{error}</p>}
-        <button className="button" disabled={busy} type="submit">
+        <button className="button" disabled={busy} type="submit" style={{ width: '100%', minHeight: '40px' }}>
           {busy ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่สตูดิโอ'}
         </button>
       </form>
@@ -171,8 +173,11 @@ function ProjectSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.cardHead}>
-          <h2>จัดการโปรเจกต์</h2>
-          <button className="button secondary" type="button" onClick={onClose}>เสร็จสิ้น</button>
+          <div>
+            <h2>จัดการโปรเจกต์</h2>
+            <p className={styles.cardSub}>สลับโปรเจกต์ที่ทำงานอยู่ หรือสร้างโปรเจกต์ใหม่</p>
+          </div>
+          <button className="button secondary small" type="button" onClick={onClose}>✕ ปิด</button>
         </div>
         <div className="field">
           <label>เลือกโปรเจกต์ปัจจุบัน</label>
@@ -191,7 +196,7 @@ function ProjectSheet({
         </div>
         <form className="field" onSubmit={handleCreate}>
           <label>สร้างโปรเจกต์ใหม่</label>
-          <div className="actions" style={{ display: 'flex', gap: '2vw' }}>
+          <div className="actions" style={{ display: 'flex', gap: '8px' }}>
             <input
               className="fieldInput"
               style={{ flex: 1 }}
@@ -311,17 +316,21 @@ function CreatePanel({
       {/* 1. เลือกเวิร์กโฟลว์ */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>1. เลือกเวิร์กโฟลว์</h2>
+          <div>
+            <h2>1. เลือกโมเดลและเวิร์กโฟลว์</h2>
+            <p className={styles.cardSub}>เลือกไปป์ไลน์ที่ต้องการสำหรับงานสร้างสรรค์</p>
+          </div>
           <span className="pill">{workflowFamilies.length} เวิร์กโฟลว์ที่ใช้ได้</span>
         </div>
 
         {workflowFamilies.length === 0 ? (
           <div className="empty">
+            <span className="emptyIcon">✦</span>
             <strong>ยังไม่มีเวิร์กโฟลว์ที่เผยแพร่</strong>
             <span>กรุณาไปที่ “ตั้งค่า → จัดการเวิร์กโฟลว์” เพื่อเผยแพร่หรือกำหนดค่าเวิร์กโฟลว์ที่ต้องการ</span>
           </div>
         ) : (
-          <div className={styles.stack} style={{ gap: '2.5vw' }}>
+          <div className={styles.stack}>
             {workflowFamilies.map(([key, fam]) => {
               const isSelected = activeWorkflow?.workflow_key === key;
               const currentWf = isSelected ? activeWorkflow : (fam.items.find((i) => i.active) || fam.items[0]);
@@ -340,9 +349,9 @@ function CreatePanel({
                   }}
                 >
                   <div className={styles.workflowHeader}>
-                    <div>
+                    <div className={styles.workflowTitleBlock}>
                       <strong>{key}</strong>
-                      <p className="muted" style={{ margin: '0.5vw 0 0', fontSize: '3vw' }}>
+                      <p className={styles.workflowSub}>
                         โมเดล: {model?.display_name || fam.modelId}
                       </p>
                     </div>
@@ -358,7 +367,7 @@ function CreatePanel({
                             setWorkflowId(target.id);
                           }
                         }}
-                        style={{ width: 'auto', minHeight: '8vw', padding: '1vw 2vw' }}
+                        className={styles.versionSelect}
                       >
                         {fam.items.map((i) => (
                           <option key={i.id} value={i.id}>
@@ -367,7 +376,7 @@ function CreatePanel({
                         ))}
                       </select>
                     ) : (
-                      <span className="pill" style={{ fontSize: '2.6vw' }}>v{currentWf.workflow_version}</span>
+                      <span className="pill">v{currentWf.workflow_version}</span>
                     )}
                   </div>
                 </div>
@@ -381,7 +390,7 @@ function CreatePanel({
             <summary>โมเดลที่ยังไม่เปิดให้ใช้ ({disabledModels.length})</summary>
             <div className="foldContent">
               {disabledModels.map((m) => (
-                <p key={m.model_id} className="muted" style={{ margin: 0, fontSize: '3vw' }}>
+                <p key={m.model_id} className={styles.disabledModelRow}>
                   • <strong>{m.display_name}</strong>: {m.reason || 'รอผู้ดูแลระบบตรวจสอบก่อนเปิดใช้งาน'}
                 </p>
               ))}
@@ -393,16 +402,13 @@ function CreatePanel({
       {/* 2. ตั้งค่าพารามิเตอร์ */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>2. ตั้งค่าพารามิเตอร์</h2>
-          <details style={{ position: 'relative' }}>
-            <summary className="pill" style={{ cursor: 'pointer' }}>จัดการพรีเซ็ต</summary>
-            <div
-              style={{
-                position: 'absolute', right: 0, top: '100%', zIndex: 10, minWidth: '60vw',
-                background: 'rgba(20, 28, 26, 0.95)', border: '1px solid var(--line-strong)',
-                borderRadius: '3vw', padding: '3vw', marginTop: '1vw', backdropFilter: 'blur(16px)'
-              }}
-            >
+          <div>
+            <h2>2. ตั้งค่าพารามิเตอร์</h2>
+            <p className={styles.cardSub}>ปรับแต่งข้อความคำสั่งและค่าคอนฟิกของโมเดล</p>
+          </div>
+          <details className={styles.presetDropdownWrapper}>
+            <summary className="pill" style={{ cursor: 'pointer' }}>⚙ จัดการพรีเซ็ต</summary>
+            <div className={styles.presetDropdown}>
               <div className="field">
                 <label>ใช้พรีเซ็ต</label>
                 <select
@@ -418,23 +424,22 @@ function CreatePanel({
                   ))}
                 </select>
               </div>
-              <div style={{ marginTop: '2vw' }}>
+              <div>
                 {!showPresetSave ? (
-                  <button className="button secondary" style={{ width: '100%', minHeight: '8vw' }} type="button" onClick={() => setShowPresetSave(true)}>
+                  <button className="button secondary" style={{ width: '100%' }} type="button" onClick={() => setShowPresetSave(true)}>
                     บันทึกเป็นพรีเซ็ตใหม่
                   </button>
                 ) : (
-                  <div style={{ display: 'flex', gap: '1.5vw' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <input
                       className="fieldInput"
-                      style={{ flex: 1, minHeight: '8vw', padding: '1vw 2vw' }}
+                      style={{ flex: 1 }}
                       placeholder="ชื่อพรีเซ็ต"
                       value={presetName}
                       onChange={(e) => setPresetName(e.target.value)}
                     />
                     <button
                       className="button"
-                      style={{ minHeight: '8vw', padding: '1vw 3vw' }}
                       type="button"
                       disabled={!presetName.trim()}
                       onClick={() => {
@@ -477,12 +482,16 @@ function CreatePanel({
       {/* 3. การสร้างและการประมวลผล */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>3. การสร้างและการประมวลผล</h2>
+          <div>
+            <h2>3. การสร้างและการประมวลผล</h2>
+            <p className={styles.cardSub}>เลือกสภาพแวดล้อม กำหนดเวลาสูงสุด และส่งงาน</p>
+          </div>
+          <span className="pill">{runtime === 'colab' ? 'Colab GPU' : 'จำลองออฟไลน์'}</span>
         </div>
 
         <div className="field">
           <label>สภาพแวดล้อมการประมวลผล</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2vw' }}>
+          <div className={styles.buttonGroup2}>
             <button
               type="button"
               className={runtime === 'mock' ? 'button' : 'button secondary'}
@@ -515,7 +524,7 @@ function CreatePanel({
             </div>
             <div className="field">
               <label>สถานะโควตางบประมาณ</label>
-              <div className="pill" style={{ width: '100%', minHeight: 'calc(var(--u) * 10)' }}>
+              <div className="pill" style={{ width: '100%', minHeight: '38px', justifyContent: 'center' }}>
                 โควตารายวัน: {shown(settings?.budget?.daily_units)} CU
               </div>
             </div>
@@ -523,8 +532,7 @@ function CreatePanel({
         )}
 
         <button
-          className="button"
-          style={{ width: '100%', minHeight: 'calc(var(--u) * 12)', fontSize: 'clamp(4vw, 1vw + 1vh, 4.8vw)' }}
+          className={`button ${styles.submitButton}`}
           disabled={!workflowId || loading === 'submit'}
           type="button"
           onClick={onSubmit}
@@ -557,24 +565,33 @@ function TasksPanel({
   return (
     <div className={styles.stack}>
       <section className={styles.card}>
-        <div className={styles.sectionTitle}>
-          <h2>งานในโปรเจกต์ปัจจุบัน</h2>
-          <button className="button secondary" style={{ minHeight: '8vw', padding: '1vw 3vw' }} type="button" onClick={onRefresh}>
-            {refreshing ? 'กำลังรีเฟรช…' : 'รีเฟรช'}
-          </button>
+        <div className={styles.cardHead}>
+          <div>
+            <h2>งานในโปรเจกต์ปัจจุบัน</h2>
+            <p className={styles.cardSub}>ติดตามสถานะ ความคืบหน้า และผลลัพธ์ของคิวงาน GPU</p>
+          </div>
+          <div className={styles.headActions}>
+            <span className="pill">{jobs.length} รายการ</span>
+            <button className="button secondary small" type="button" onClick={onRefresh} disabled={refreshing}>
+              {refreshing ? 'กำลังรีเฟรช…' : 'รีเฟรช'}
+            </button>
+          </div>
         </div>
         {error && <p className="status error" role="alert">{error}</p>}
         {jobs.length ? (
           jobs.map((job) => (
-            <article className={styles.job} key={job.id}>
-              <div className={styles.jobHeader}>
-                <strong>{job.workflow_key || job.id}</strong>
+            <article className={styles.workflowCard} key={job.id}>
+              <div className={styles.workflowHeader}>
+                <div className={styles.workflowTitleBlock}>
+                  <strong>{job.workflow_key || job.id}</strong>
+                  <div className={styles.jobMeta}>
+                    <span>รหัส: {job.id.slice(0, 8)}</span>
+                    <span>•</span>
+                    <span>{job.created_at || 'เมื่อสักครู่'}</span>
+                    {job.estimated_units ? <><span>•</span><span>ประเมิน {shown(job.estimated_units)} CU</span></> : null}
+                  </div>
+                </div>
                 <span className="pill">{job.provider === 'mock' ? 'MOCK · ' : ''}{readableState(job.state)}</span>
-              </div>
-              <div className={styles.jobMeta}>
-                <span>งาน: {job.id.slice(0, 8)}</span>
-                <span>สร้างเมื่อ: {job.created_at || 'เมื่อสักครู่'}</span>
-                {job.estimated_units ? <span>ประเมิน: {shown(job.estimated_units)} CU</span> : null}
               </div>
               {progressPercent(job.progress) !== null && (
                 <div className={styles.progress} aria-label={`ความคืบหน้า ${progressPercent(job.progress)}%`}>
@@ -585,16 +602,16 @@ function TasksPanel({
                 <p className="status error" role="alert">{job.error_message || job.error}</p>
               )}
               <div className="actions">
-                <button className="button secondary" type="button" onClick={() => onDetail(job)}>
+                <button className="button secondary small" type="button" onClick={() => onDetail(job)}>
                   ดูรายละเอียด
                 </button>
                 {!terminalStates.has(String(job.state || '').toLowerCase()) && (
-                  <button className="button danger" type="button" onClick={() => onCancel(job.id)}>
+                  <button className="button danger small" type="button" onClick={() => onCancel(job.id)}>
                     ยกเลิก
                   </button>
                 )}
                 {String(job.state || '').toLowerCase().includes('failed') && (
-                  <button className="button secondary" type="button" onClick={() => onRetry(job.id)}>
+                  <button className="button secondary small" type="button" onClick={() => onRetry(job.id)}>
                     ลองใหม่
                   </button>
                 )}
@@ -603,6 +620,7 @@ function TasksPanel({
           ))
         ) : (
           <div className="empty">
+            <span className="emptyIcon">⚡</span>
             <strong>ยังไม่มีงานในโปรเจกต์นี้</strong>
             <span>เมื่องานสร้างถูกส่งจากแท็บสร้างสรรค์ รายการงานจะแสดงที่นี่</span>
           </div>
@@ -624,49 +642,57 @@ function GalleryPanel({
   onOpen: (asset: GalleryAsset) => void;
 }) {
   return (
-    <section className={styles.card}>
-      <div className={styles.cardHead}>
-        <h2>แกลเลอรีผลงาน</h2>
-        <span className="pill">{gallery.length} ผลงาน</span>
-      </div>
-      {gallery.length ? (
-        <div className={styles.assetGrid}>
-          {gallery.map((asset) => {
-            const isVideo = asset.mime.startsWith('video/');
-            const isJson = asset.mime.includes('json') || asset.filename?.toLowerCase().endsWith('.json');
-            return (
-              <article className={styles.asset} key={asset.id}>
-                <button className={styles.assetImage} type="button" onClick={() => onOpen(asset)}>
-                  {isVideo ? (
-                    <video src={assetUrl(asset)} preload="metadata" muted aria-label={asset.filename || 'ไฟล์วิดีโอ'} />
-                  ) : isJson ? (
-                    <div className={styles.diagnosticsThumb}>JSON<br /><small>ไฟล์วินิจฉัย</small></div>
-                  ) : (
-                    <img src={assetUrl(asset, true)} alt={asset.filename || 'ผลงาน'} />
-                  )}
-                </button>
-                <footer>
-                  <span className={styles.assetName}>{asset.filename || asset.id}</span>
-                  <div className="actions" style={{ gap: '1vw' }}>
-                    <button className="button secondary" style={{ flex: 1, minHeight: '7vw', padding: '1vw' }} type="button" onClick={() => onFavorite(asset)}>
-                      {asset.favorite ? 'เลิกถูกใจ' : 'ถูกใจ'}
-                    </button>
-                    <button className="button danger" style={{ minHeight: '7vw', padding: '1vw 2vw' }} type="button" onClick={() => onDelete(asset)}>
-                      ลบ
-                    </button>
-                  </div>
-                </footer>
-              </article>
-            );
-          })}
+    <div className={styles.stack}>
+      <section className={styles.card}>
+        <div className={styles.cardHead}>
+          <div>
+            <h2>แกลเลอรีผลงาน</h2>
+            <p className={styles.cardSub}>ไฟล์ภาพ วิดีโอ และข้อมูลผลลัพธ์ที่สร้างเสร็จสมบูรณ์</p>
+          </div>
+          <span className="pill">{gallery.length} ผลงาน</span>
         </div>
-      ) : (
-        <div className="empty">
-          <strong>ยังไม่มีผลงานที่สร้าง</strong>
-          <span>ภาพและวิดีโอที่สร้างสำเร็จจะถูกบันทึกไว้ที่นี่โดยอัตโนมัติ</span>
-        </div>
-      )}
-    </section>
+        {gallery.length ? (
+          <div className={styles.assetGrid}>
+            {gallery.map((asset) => {
+              const isVideo = asset.mime.startsWith('video/');
+              const isJson = asset.mime.includes('json') || asset.filename?.toLowerCase().endsWith('.json');
+              return (
+                <article className={styles.asset} key={asset.id}>
+                  <button className={styles.assetImage} type="button" onClick={() => onOpen(asset)}>
+                    {isVideo ? (
+                      <video src={assetUrl(asset)} preload="metadata" muted aria-label={asset.filename || 'ไฟล์วิดีโอ'} />
+                    ) : isJson ? (
+                      <div className={styles.diagnosticsThumb}>JSON<br /><small>ไฟล์วินิจฉัย</small></div>
+                    ) : (
+                      <img src={assetUrl(asset, true)} alt={asset.filename || 'ผลงาน'} />
+                    )}
+                  </button>
+                  <footer>
+                    <span className={styles.assetName} title={asset.filename || asset.id}>
+                      {asset.filename || asset.id}
+                    </span>
+                    <div className={styles.assetActions}>
+                      <button className="button secondary small" style={{ flex: 1 }} type="button" onClick={() => onFavorite(asset)}>
+                        {asset.favorite ? '★ ถูกใจแล้ว' : '☆ ถูกใจ'}
+                      </button>
+                      <button className="button danger small" type="button" onClick={() => onDelete(asset)}>
+                        ลบ
+                      </button>
+                    </div>
+                  </footer>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="empty">
+            <span className="emptyIcon">🖼</span>
+            <strong>ยังไม่มีผลงานที่สร้าง</strong>
+            <span>ภาพและวิดีโอที่สร้างสำเร็จจะถูกบันทึกไว้ที่นี่โดยอัตโนมัติ</span>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -687,9 +713,9 @@ function WorkflowsPanel({
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className={styles.stack}>
+    <div className={styles.stack} style={{ gap: '12px' }}>
       <details className="foldable">
-        <summary>นำเข้าร่างเวิร์กโฟลว์ใหม่</summary>
+        <summary>นำเข้าร่างเวิร์กโฟลว์ใหม่ (JSON)</summary>
         <div className="foldContent">
           <textarea
             className={styles.code}
@@ -698,7 +724,7 @@ function WorkflowsPanel({
             onChange={(e) => setText(e.target.value)}
           />
           <div className="actions">
-            <button className="button secondary" type="button" onClick={() => fileRef.current?.click()}>
+            <button className="button secondary small" type="button" onClick={() => fileRef.current?.click()}>
               เลือกไฟล์ JSON
             </button>
             <input
@@ -712,64 +738,60 @@ function WorkflowsPanel({
                 e.target.value = '';
               }}
             />
-            <button className="button" type="button" disabled={!text.trim()} onClick={() => onImport(text)}>
+            <button className="button small" type="button" disabled={!text.trim()} onClick={() => onImport(text)}>
               นำเข้าร่าง
             </button>
           </div>
         </div>
       </details>
 
-      <section className={styles.card}>
-        <div className={styles.cardHead}>
-          <h2>เวอร์ชันเวิร์กโฟลว์ที่ลงทะเบียนแล้ว</h2>
-          <span className="pill">{workflows.length} เวอร์ชัน</span>
+      {workflows.length ? (
+        workflows.map((wf) => (
+          <article className={styles.workflowCard} key={wf.id}>
+            <div className={styles.workflowHeader}>
+              <div className={styles.workflowTitleBlock}>
+                <strong>{wf.workflow_key} · v{wf.workflow_version}</strong>
+                <p className={styles.workflowSub}>
+                  โมเดล {wf.model_id}
+                </p>
+              </div>
+              <span className="pill">{workflowState(wf.state, wf.active)}</span>
+            </div>
+            <div className="actions">
+              <button
+                className="button secondary small"
+                type="button"
+                disabled={wf.state === 'published'}
+                onClick={() => onValidate(wf)}
+              >
+                ตรวจสอบ
+              </button>
+              <button
+                className="button small"
+                type="button"
+                disabled={wf.state === 'published'}
+                onClick={() => onPublish(wf)}
+              >
+                ยืนยันการเผยแพร่
+              </button>
+              <button
+                className="button secondary small"
+                type="button"
+                disabled={wf.state !== 'published'}
+                onClick={() => onRollback(wf)}
+              >
+                ย้อนกลับไปใช้เวอร์ชันนี้
+              </button>
+            </div>
+          </article>
+        ))
+      ) : (
+        <div className="empty">
+          <span className="emptyIcon">⚙</span>
+          <strong>ตรวจไม่พบเวิร์กโฟลว์</strong>
+          <span>สามารถนำเข้าไฟล์ JSON ด้านบนเพื่อเริ่มต้นใช้งาน</span>
         </div>
-        {workflows.length ? (
-          workflows.map((wf) => (
-            <article className={styles.workflowCard} key={wf.id}>
-              <div className={styles.workflowHeader}>
-                <div>
-                  <strong>{wf.workflow_key} · v{wf.workflow_version}</strong>
-                  <p className="muted" style={{ margin: '0.5vw 0 0', fontSize: '3vw' }}>
-                    โมเดล {wf.model_id}
-                  </p>
-                </div>
-                <span className="pill">{workflowState(wf.state, wf.active)}</span>
-              </div>
-              <div className="actions">
-                <button
-                  className="button secondary"
-                  type="button"
-                  disabled={wf.state === 'published'}
-                  onClick={() => onValidate(wf)}
-                >
-                  ตรวจสอบ
-                </button>
-                <button
-                  className="button"
-                  type="button"
-                  disabled={wf.state === 'published'}
-                  onClick={() => onPublish(wf)}
-                >
-                  ยืนยันการเผยแพร่
-                </button>
-                <button
-                  className="button secondary"
-                  type="button"
-                  disabled={wf.state !== 'published'}
-                  onClick={() => onRollback(wf)}
-                >
-                  ย้อนกลับไปใช้เวอร์ชันนี้
-                </button>
-              </div>
-            </article>
-          ))
-        ) : (
-          <div className="empty">
-            <strong>ตรวจไม่พบเวิร์กโฟลว์</strong>
-          </div>
-        )}
-      </section>
+      )}
     </div>
   );
 }
@@ -814,8 +836,11 @@ function SettingsPanel({
       {/* 1. ภาพรวมการทำงานและโควตา */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>ภาพรวมการทำงานและโควตา</h2>
-          <span className="pill">GPU จริง: {settings?.real_enabled ? 'เปิดใช้งานแล้ว' : 'ยังไม่เปิดใช้งาน'}</span>
+          <div>
+            <h2>ภาพรวมการทำงานและโควตา</h2>
+            <p className={styles.cardSub}>สรุปหน่วยการประมวลผล (CU) และสถานะ Runtime</p>
+          </div>
+          <span className="pill">{settings?.real_enabled ? 'GPU จริง: เปิดใช้งานแล้ว' : 'โหมดจำลอง (Mock)'}</span>
         </div>
         <div className={styles.statGrid}>
           <div className={styles.stat}>
@@ -840,28 +865,36 @@ function SettingsPanel({
       {/* 2. การเชื่อมต่อ Google */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>การเชื่อมต่อ Google</h2>
+          <div>
+            <h2>การเชื่อมต่อ Google</h2>
+            <p className={styles.cardSub}>เชื่อมต่อบัญชี Google สำหรับ Colab GPU และ Google Drive</p>
+          </div>
         </div>
         {(['colab', 'drive'] as const).map((purpose) => {
           const state = settings?.google?.[purpose];
           return (
             <div className={styles.workflowCard} key={purpose}>
               <div className={styles.workflowHeader}>
-                <strong>{purpose === 'colab' ? 'Google Colab' : 'Google Drive'}</strong>
+                <div className={styles.workflowTitleBlock}>
+                  <strong>{purpose === 'colab' ? 'Google Colab' : 'Google Drive'}</strong>
+                  <p className={styles.workflowSub}>
+                    {purpose === 'colab' ? 'เชื่อมต่อสำหรับรันไปป์ไลน์ GPU บน Google Colab' : 'เชื่อมต่อสำหรับบันทึกผลงานและโหลดโมเดลจาก Drive'}
+                  </p>
+                </div>
                 <span className="pill">
                   {state?.connected ? 'เชื่อมต่อแล้ว' : (oauthConfigured || state?.configured) ? 'ตั้งค่าแล้วยังไม่เชื่อมต่อ' : 'ยังไม่ได้ตั้งค่า'}
                 </span>
               </div>
               <div className="actions">
                 <button
-                  className="button secondary"
+                  className="button secondary small"
                   type="button"
                   disabled={!oauthConfigured && !state?.configured}
                   onClick={() => onConnect(purpose)}
                 >
                   เชื่อมต่อ {purpose === 'colab' ? 'Google Colab' : 'Google Drive'}
                 </button>
-                <button className="button danger" type="button" onClick={() => onDisconnect(purpose)}>
+                <button className="button danger small" type="button" onClick={() => onDisconnect(purpose)}>
                   ยกเลิกการเชื่อมต่อ
                 </button>
               </div>
@@ -879,7 +912,11 @@ function SettingsPanel({
       {/* 3. การจัดการทรัพยากร GPU */}
       <section className={styles.card}>
         <div className={styles.cardHead}>
-          <h2>การจัดการทรัพยากร GPU</h2>
+          <div>
+            <h2>การจัดการทรัพยากร GPU</h2>
+            <p className={styles.cardSub}>ตรวจสอบฮาร์ดแวร์ GPU ที่พร้อมให้บริการหรือสั่งหยุดฉุกเฉิน</p>
+          </div>
+          {specs.length > 0 && <span className="pill">{specs.length} สเปก</span>}
         </div>
         <div className="actions">
           <button className="button secondary" disabled={loading === 'check'} type="button" onClick={onCheck}>
@@ -893,25 +930,37 @@ function SettingsPanel({
       </section>
 
       {/* 4. จัดการเวิร์กโฟลว์และโมเดล */}
-      <details className="foldable">
-        <summary>จัดการเวิร์กโฟลว์และโมเดล</summary>
-        <div className="foldContent">
-          <WorkflowsPanel
-            workflows={workflows}
-            onImport={onImport}
-            onValidate={onValidate}
-            onPublish={onPublish}
-            onRollback={onRollback}
-          />
+      <section className={styles.card}>
+        <div className={styles.cardHead}>
+          <div>
+            <h2>จัดการเวิร์กโฟลว์และโมเดล</h2>
+            <p className={styles.cardSub}>ตรวจสอบ เผยแพร่ หรือย้อนกลับเวอร์ชันเวิร์กโฟลว์ในระบบ</p>
+          </div>
+          <span className="pill">{workflows.length} เวอร์ชัน</span>
         </div>
-      </details>
+        <WorkflowsPanel
+          workflows={workflows}
+          onImport={onImport}
+          onValidate={onValidate}
+          onPublish={onPublish}
+          onRollback={onRollback}
+        />
+      </section>
 
-      {/* 5. ออกจากระบบ */}
-      <div style={{ textAlign: 'center', marginTop: '2vw' }}>
-        <button className="button danger" type="button" onClick={onLogout}>
-          ออกจากระบบ
-        </button>
-      </div>
+      {/* 5. เซสชันการใช้งาน */}
+      <section className={styles.card}>
+        <div className={styles.cardHead}>
+          <div>
+            <h2>เซสชันการใช้งาน</h2>
+            <p className={styles.cardSub}>จัดการการเข้าถึงสตูดิโอและการออกจากระบบ</p>
+          </div>
+        </div>
+        <div className="actions">
+          <button className="button danger" type="button" onClick={onLogout}>
+            ออกจากระบบ
+          </button>
+        </div>
+      </section>
 
       {error && <p className="status error" role="alert">{error}</p>}
     </div>
@@ -1267,7 +1316,7 @@ export default function App() {
           onClick={() => setShowProjectSheet(true)}
         >
           <span>📁 {activeProject ? activeProject.title : 'เลือกโปรเจกต์'}</span>
-          <small style={{ color: 'var(--muted)', marginLeft: '1vw' }}>▾</small>
+          <small style={{ color: 'var(--muted)', marginLeft: '4px' }}>▾</small>
         </button>
       </header>
 
@@ -1408,16 +1457,28 @@ export default function App() {
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
-            aria-label="ยืนยันการส่งงาน"
+            aria-label="ยืนยันการเริ่มสร้าง"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>ยืนยันการเริ่มสร้าง</h2>
-            <p>
-              เวิร์กโฟลว์: <strong>{activeWorkflow.workflow_key} · v{activeWorkflow.workflow_version}</strong><br />
-              สภาพแวดล้อม: <strong>{runtime === 'colab' ? 'Colab GPU' : 'จำลองออฟไลน์'}</strong><br />
-              {runtime === 'colab' && <>จำกัดเวลาสูงสุด: <strong>{maxRuntime} นาที</strong></>}
-            </p>
-            <div className="actions">
+            <div className={styles.cardHead}>
+              <div>
+                <h2>ยืนยันการเริ่มสร้าง</h2>
+                <p className={styles.cardSub}>ตรวจสอบข้อมูลก่อนส่งงานไปยังระบบประมวลผล</p>
+              </div>
+              <button className="button secondary small" type="button" onClick={() => setConfirm(null)}>✕ ปิด</button>
+            </div>
+            <div className={styles.dialogContent}>
+              <div className={styles.workflowCard}>
+                <div className={styles.workflowTitleBlock}>
+                  <strong>{activeWorkflow.workflow_key} · v{activeWorkflow.workflow_version}</strong>
+                  <p className={styles.workflowSub}>
+                    สภาพแวดล้อม: {runtime === 'colab' ? 'Colab GPU' : 'จำลองออฟไลน์ (Mock)'}
+                    {runtime === 'colab' && ` · เวลาประมวลผลสูงสุด ${maxRuntime} นาที`}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="actions" style={{ justifyContent: 'flex-end', marginTop: '8px' }}>
               <button className="button secondary" type="button" onClick={() => setConfirm(null)}>ยกเลิก</button>
               <button className="button" disabled={loading === 'submit'} type="button" onClick={() => void submitJob()}>
                 {loading === 'submit' ? 'กำลังส่ง…' : 'ยืนยันเริ่มทำงาน'}
@@ -1437,9 +1498,17 @@ export default function App() {
             aria-label="ยืนยันการหยุดฉุกเฉิน"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>ยืนยันการหยุดงานประมวลผลทั้งหมดฉุกเฉิน?</h2>
-            <p className="error">การดำเนินการนี้จะขอยกเลิกงานทั้งหมดที่กำลังทำงานอยู่และปล่อยคืน Colab GPU runtime ที่เกี่ยวข้อง</p>
-            <div className="actions">
+            <div className={styles.cardHead}>
+              <div>
+                <h2>ยืนยันการหยุดฉุกเฉิน</h2>
+                <p className={styles.cardSub}>การหยุดการประมวลผล GPU ทั้งหมดในระบบ</p>
+              </div>
+              <button className="button secondary small" type="button" onClick={() => setConfirm(null)}>✕ ปิด</button>
+            </div>
+            <div className="notice" style={{ borderColor: 'var(--danger)', background: 'var(--danger-soft)', color: 'var(--danger)' }}>
+              การดำเนินการนี้จะขอยกเลิกงานทั้งหมดที่กำลังทำงานอยู่และปล่อยคืน Colab GPU runtime ที่เกี่ยวข้องทันที
+            </div>
+            <div className="actions" style={{ justifyContent: 'flex-end', marginTop: '8px' }}>
               <button className="button secondary" type="button" onClick={() => setConfirm(null)}>ยกเลิก</button>
               <button className="button danger" type="button" onClick={() => void stopCompute()}>ยืนยันหยุดฉุกเฉิน</button>
             </div>
@@ -1458,13 +1527,21 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.cardHead}>
-              <h2>รายละเอียดงาน · {detail.id.slice(0, 8)}</h2>
-              <button className="button secondary" type="button" onClick={() => setDetail(null)}>ปิด</button>
+              <div>
+                <h2>รายละเอียดงาน</h2>
+                <p className={styles.cardSub}>รหัส: {detail.id.slice(0, 8)} · สร้างเมื่อ {String(detail.created_at || 'ไม่ทราบ')}</p>
+              </div>
+              <button className="button secondary small" type="button" onClick={() => setDetail(null)}>✕ ปิด</button>
             </div>
-            <p>
-              สถานะ: <strong>{readableState(detail.state)}</strong> · สภาพแวดล้อม: <strong>{detail.provider}</strong><br />
-              เวลาที่สร้าง: {String(detail.created_at || 'ไม่ทราบ')}
-            </p>
+            <div className={styles.workflowCard}>
+              <div className={styles.workflowHeader}>
+                <div className={styles.workflowTitleBlock}>
+                  <strong>{detail.workflow_key || detail.id}</strong>
+                  <p className={styles.workflowSub}>สภาพแวดล้อม: {detail.provider}</p>
+                </div>
+                <span className="pill">{readableState(detail.state)}</span>
+              </div>
+            </div>
             {detail.timings ? (
               <details className="foldable" open>
                 <summary>บันทึกเวลาแต่ละขั้นตอน</summary>
@@ -1496,8 +1573,13 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.cardHead}>
-              <h2>{viewer.filename || viewer.id}</h2>
-              <button className="button secondary" type="button" onClick={() => setViewer(null)}>ปิด</button>
+              <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                <h2 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {viewer.filename || viewer.id}
+                </h2>
+                <p className={styles.cardSub}>รายละเอียดและดาวน์โหลดผลงาน</p>
+              </div>
+              <button className="button secondary small" type="button" onClick={() => setViewer(null)}>✕ ปิด</button>
             </div>
             {viewer.mime.startsWith('video/') ? (
               <video className={styles.viewerVideo} src={assetUrl(viewer)} controls autoPlay />
@@ -1507,16 +1589,16 @@ export default function App() {
               <p className="muted">ไฟล์วินิจฉัยไม่สามารถดูตัวอย่างได้โดยตรง กรุณาดาวน์โหลดเพื่อเปิดดู</p>
             )}
             <div className="actions">
-              <button className="button secondary" type="button" onClick={() => void favorite(viewer)}>
-                {viewer.favorite ? 'เลิกถูกใจ' : 'ถูกใจ'}
+              <button className="button secondary small" type="button" onClick={() => void favorite(viewer)}>
+                {viewer.favorite ? '★ ถูกใจแล้ว' : '☆ ถูกใจ'}
               </button>
-              <button className="button secondary" type="button" onClick={() => void reuseAsset(viewer)}>
+              <button className="button secondary small" type="button" onClick={() => void reuseAsset(viewer)}>
                 สร้างอีกครั้งด้วยพารามิเตอร์นี้
               </button>
-              <a className="button secondary" href={assetUrl(viewer)} download={viewer.filename || viewer.id} target="_blank" rel="noreferrer">
+              <a className="button secondary small" href={assetUrl(viewer)} download={viewer.filename || viewer.id} target="_blank" rel="noreferrer">
                 ดาวน์โหลดผลงาน
               </a>
-              <button className="button danger" type="button" onClick={() => void remove(viewer)}>
+              <button className="button danger small" type="button" onClick={() => void remove(viewer)}>
                 ลบผลงาน
               </button>
             </div>

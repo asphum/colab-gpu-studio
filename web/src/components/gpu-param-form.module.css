@@ -1,18 +1,109 @@
-.form { display: grid; gap: clamp(3vw, 1.2vw + 1vh, 5vw); }
-.group { display: grid; gap: clamp(2vw, .7vw + .4vh, 3vw); }
-.group h3 { margin: 0; color: var(--accent); font-size: clamp(4vw, 1vw + 1vh, 5vw); }
-.field { display: grid; gap: 1.2vw; min-width: 0; }
-.field label { color: var(--muted); font-size: clamp(3.2vw, .8vw + .5vh, 4vw); font-weight: 700; }
-.field input:not([type='checkbox']), .field textarea, .field select { width: 100%; min-height: clamp(12vw, 4vh, 4vw); border: .12vw solid var(--line); border-radius: clamp(2vw, .8vw, 1.2vw); padding: clamp(2.5vw, .7vw + .4vh, 3vw); color: var(--text); background: var(--panel-strong); font: inherit; }
-.field textarea { min-height: 25vw; resize: vertical; }
-.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); outline: .2vw solid color-mix(in srgb, var(--accent) 30%, transparent); }
-.hint { color: var(--muted); font-size: clamp(2.8vw, .7vw + .4vh, 3.4vw); overflow-wrap: anywhere; }
-.checkbox { display: flex; align-items: center; gap: 2vw; min-height: 12vw; color: var(--text) !important; }
-.checkbox input { width: 6vw; height: 6vw; accent-color: var(--accent); }
-.fileControl { display: grid; gap: 2vw; }
-.advanced { border-top: .12vw solid var(--line); padding-top: 1vw; }
-.advanced summary { min-height: 12vw; color: var(--muted); cursor: pointer; }
-.advanced[open] { display: grid; gap: 3vw; }
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.group {
+  display: grid;
+  gap: 12px;
+}
+
+.group h3 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field input:not([type='checkbox']),
+.field textarea,
+.field select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: var(--text);
+  background: var(--panel-strong);
+  font: inherit;
+  font-size: 14px;
+}
+
+.field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  color: var(--text) !important;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.fileControl {
+  display: grid;
+  gap: 8px;
+}
+
+.advanced {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.advanced summary {
+  min-height: 34px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.advanced summary:hover {
+  color: var(--text);
+}
+
+.advanced[open] {
+  display: grid;
+  gap: 12px;
+}
 
 @media (min-width: 768px) {
   .form {
@@ -22,13 +113,13 @@
   .group {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 20px;
+    gap: 14px 18px;
   }
 
   .group h3 {
     grid-column: 1 / -1;
-    font-size: 16px;
-    margin-bottom: 4px;
+    font-size: 15.5px;
+    margin-bottom: 2px;
   }
 
   /* แสดงผล prompt หลายบรรทัดหรือข้อความยาวเต็มแถว */
@@ -38,7 +129,7 @@
   }
 
   .field label {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 
   .field input:not([type='checkbox']),
@@ -70,6 +161,10 @@
   .advanced[open] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 20px;
+    gap: 14px 18px;
+  }
+
+  .advanced[open] summary {
+    grid-column: 1 / -1;
   }
 }

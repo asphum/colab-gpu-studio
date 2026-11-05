@@ -1,5 +1,5 @@
 :root {
-  --u: min(1vw, 5.6px);
+  --u: 4px;
   --bg-base: #0b100f;
   --surface: #0e1513;
   --panel: rgba(22, 30, 28, 0.75);
@@ -18,7 +18,7 @@
   --success: #9fe3b0;
   --success-soft: rgba(159, 227, 176, 0.12);
   --warning: #f2cf79;
-  --nav-height: calc(var(--u) * 15);
+  --nav-height: 56px;
   color-scheme: dark;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "PingFang SC", sans-serif;
 }
@@ -43,7 +43,7 @@ body {
     radial-gradient(ellipse at 50% -10%, rgba(105, 199, 168, 0.12) 0%, transparent 60%),
     radial-gradient(circle at 100% 100%, rgba(20, 45, 38, 0.15) 0%, transparent 50%);
   background-attachment: fixed;
-  font-size: clamp(3.5vw, 1vw + .5vh, 4.2vw);
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -63,15 +63,16 @@ a {
 }
 
 :focus-visible {
-  outline: calc(var(--u) * 0.6) solid var(--accent);
-  outline-offset: calc(var(--u) * 0.3);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .app {
-  width: min(100%, 580px);
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto;
   min-height: 100vh;
-  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 14vw);
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
   position: relative;
 }
 
@@ -83,9 +84,9 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3vw;
-  padding: max(2.5vw, env(safe-area-inset-top)) 4vw 2.5vw;
-  background: rgba(11, 16, 15, 0.78);
+  gap: 12px;
+  padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+  background: rgba(11, 16, 15, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--line);
@@ -94,16 +95,16 @@ a {
 .brand {
   display: flex;
   flex-direction: column;
-  gap: 0.2vw;
+  gap: 2px;
   min-width: 0;
   font-weight: 800;
-  font-size: clamp(4vw, 1.2vw + 1vh, 4.8vw);
+  font-size: 18px;
   letter-spacing: -0.02em;
 }
 
 .brand small {
   color: var(--muted);
-  font-size: clamp(2.4vw, 0.65vw + 0.3vh, 3vw);
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: normal;
 }
@@ -112,17 +113,17 @@ a {
 .projectChip {
   display: inline-flex;
   align-items: center;
-  gap: 1.5vw;
+  gap: 6px;
   max-width: 50%;
-  min-height: calc(var(--u) * 9.5);
-  padding: 1.5vw 3.5vw;
-  border-radius: 99vw;
+  min-height: 34px;
+  padding: 4px 12px;
+  border-radius: 9999px;
   border: 1px solid var(--line-strong);
   background: var(--panel-strong);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--text);
-  font-size: clamp(2.8vw, 0.7vw + 0.4vh, 3.4vw);
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -147,13 +148,14 @@ a {
   bottom: 0;
   left: 0;
   right: 0;
-  width: min(100%, 580px);
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1vw;
-  padding: 1.5vw max(2vw, env(safe-area-inset-left)) max(2.5vw, env(safe-area-inset-bottom));
-  background: rgba(12, 17, 16, 0.92);
+  gap: 4px;
+  padding: 6px max(10px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
+  background: rgba(12, 17, 16, 0.94);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border-top: 1px solid var(--line);
@@ -165,21 +167,21 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.8vw;
-  min-height: calc(var(--u) * 11);
-  padding: 1.5vw 1vw;
+  gap: 3px;
+  min-height: 46px;
+  padding: 4px 6px;
   border: 0;
-  border-radius: 3vw;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted);
-  font-size: clamp(2.8vw, 0.7vw + 0.4vh, 3.4vw);
+  font-size: 11.5px;
   font-weight: 600;
   transition: color 0.15s, background-color 0.15s;
 }
 
 .bottomNav button svg {
-  width: calc(var(--u) * 4.5);
-  height: calc(var(--u) * 4.5);
+  width: 18px;
+  height: 18px;
 }
 
 .bottomNav button[aria-current="page"] {
@@ -190,39 +192,39 @@ a {
 
 .tabBadge {
   position: absolute;
-  top: 1.5vw;
-  right: 25%;
-  min-width: 4vw;
-  height: 4vw;
-  padding: 0 1vw;
-  border-radius: 99vw;
+  top: 4px;
+  right: 20%;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9999px;
   background: var(--accent);
   color: var(--on-accent);
-  font-size: clamp(2vw, 0.5vw + 0.3vh, 2.5vw);
+  font-size: 10.5px;
   font-weight: 900;
   display: grid;
   place-items: center;
-  box-shadow: 0 0 8px var(--accent);
+  box-shadow: 0 0 6px var(--accent);
 }
 
 /* หน้าจอเข้าสู่ระบบ */
 .login {
-  width: min(100%, 92vw);
-  max-width: 460px;
+  width: 100%;
+  max-width: 440px;
   min-height: 100vh;
   margin: 0 auto;
   display: grid;
   place-items: center;
-  padding: 6vw 4vw;
+  padding: 24px 16px;
 }
 
 .loginCard {
   width: 100%;
   display: grid;
-  gap: 4vw;
-  padding: 7vw 6vw;
+  gap: 20px;
+  padding: 28px 24px;
   border: 1px solid var(--line);
-  border-radius: 5vw;
+  border-radius: 20px;
   background: var(--panel);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -231,24 +233,26 @@ a {
 
 .loginCard h1 {
   margin: 0;
-  font-size: clamp(6.5vw, 1.8vw + 1.8vh, 8.5vw);
-  letter-spacing: -0.03em;
+  font-size: 24px;
+  letter-spacing: -0.02em;
 }
 
 .loginCard label {
   display: grid;
-  gap: 2vw;
+  gap: 8px;
   color: var(--muted);
   font-weight: 700;
+  font-size: 13.5px;
 }
 
 .loginCard input {
-  min-height: 13vw;
+  min-height: 42px;
   border: 1px solid var(--line-strong);
-  border-radius: 3vw;
-  padding: 3vw;
+  border-radius: 10px;
+  padding: 8px 12px;
   color: var(--text);
   background: var(--panel-strong);
+  font-size: 14px;
 }
 
 /* คลาสสไตล์พื้นฐานทั่วไป */
@@ -260,6 +264,7 @@ a {
   margin: 0;
   color: var(--accent);
   overflow-wrap: anywhere;
+  font-size: 13px;
 }
 
 .error {
@@ -271,43 +276,49 @@ a {
 }
 
 .notice {
-  padding: 3vw 4vw;
-  border-radius: 3vw;
-  border-left: 0.8vw solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 10px;
+  border-left: 4px solid var(--accent);
   background: var(--accent-soft);
   color: var(--text);
   overflow-wrap: anywhere;
-  font-size: clamp(3vw, 0.8vw + 0.4vh, 3.8vw);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2vw;
+  gap: 8px;
 }
 
-.actions > * {
-  min-width: 12vw;
-}
-
-/* สไตล์ปุ่มมาตรฐาน (มุมโค้งมนกระจกฝ้า) */
+/* สไตล์ปุ่มมาตรฐาน */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5vw;
-  min-height: calc(var(--u) * 10);
+  gap: 6px;
+  min-height: 36px;
   border: 1px solid transparent;
-  border-radius: 99vw;
-  padding: 2vw 4.5vw;
+  border-radius: 9999px;
+  padding: 6px 16px;
   color: var(--on-accent);
   background: var(--accent);
   font: inherit;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: transform 0.1s, opacity 0.15s, background-color 0.15s;
-  box-shadow: 0 2px 10px rgba(105, 199, 168, 0.25);
+  box-shadow: 0 2px 8px rgba(105, 199, 168, 0.2);
+}
+
+.button.small {
+  min-height: 30px;
+  padding: 4px 12px;
+  font-size: 12.5px;
+  gap: 4px;
 }
 
 .button:active {
@@ -347,12 +358,13 @@ a {
 /* คอมโพเนนต์ฟอร์มกรอกข้อมูล */
 .field {
   display: grid;
-  gap: 1.5vw;
+  gap: 6px;
+  min-width: 0;
 }
 
 .field label {
   color: var(--muted);
-  font-size: clamp(3vw, 0.7vw + 0.5vh, 3.8vw);
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -361,20 +373,21 @@ a {
 .field textarea,
 .field select {
   width: 100%;
-  min-height: calc(var(--u) * 10);
+  min-height: 38px;
   border: 1px solid var(--line);
-  border-radius: 2.5vw;
-  padding: 2.5vw 3.5vw;
+  border-radius: 10px;
+  padding: 8px 12px;
   color: var(--text);
   background: var(--panel-strong);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   font: inherit;
+  font-size: 14px;
   transition: border-color 0.15s;
 }
 
 .field textarea {
-  min-height: 22vw;
+  min-height: 80px;
   resize: vertical;
 }
 
@@ -388,7 +401,7 @@ a {
 
 .twoCol {
   display: grid;
-  gap: 3vw;
+  gap: 12px;
 }
 
 @media (min-width: 480px) {
@@ -400,55 +413,101 @@ a {
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 1.2vw;
+  gap: 6px;
   width: fit-content;
-  padding: 1vw 3vw;
-  border-radius: 99vw;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 9999px;
   border: 1px solid var(--line);
   color: var(--muted);
   background: var(--panel-strong);
-  font-size: clamp(2.8vw, 0.7vw + 0.4vh, 3.4vw);
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .empty {
   display: grid;
   place-items: center;
-  gap: 2vw;
-  min-height: 24vw;
-  padding: 6vw 4vw;
+  gap: 6px;
+  min-height: 120px;
+  padding: 24px 16px;
   color: var(--muted);
   text-align: center;
+  font-size: 13px;
   border: 1px dashed var(--line-strong);
-  border-radius: 4vw;
+  border-radius: 14px;
   background: rgba(22, 30, 28, 0.35);
+}
+
+.emptyIcon {
+  font-size: 24px;
+  color: var(--accent);
+  opacity: 0.85;
+  line-height: 1;
+  margin-bottom: 2px;
 }
 
 .empty strong {
   color: var(--text);
+  font-size: 14px;
 }
 
-@media (min-width: 768px) {
-  :root {
-    --u: 5.6px;
-  }
+/* สไตล์แผงพับเปิด/ปิด (Accordion) */
+details.foldable {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-strong);
+  overflow: hidden;
+}
 
+details.foldable > summary {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  color: var(--muted);
+}
+
+details.foldable > summary:hover {
+  color: var(--text);
+}
+
+details.foldable[open] > summary {
+  color: var(--accent);
+  border-bottom: 1px solid var(--line);
+}
+
+details.foldable > .foldContent {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+/* Desktop & Tablet Breakpoints */
+@media (min-width: 768px) {
   body {
     font-size: 15px;
     line-height: 1.6;
   }
 
   .app {
-    width: min(100%, 880px);
+    max-width: 960px;
     padding-top: 20px;
-    padding-bottom: 30px;
+    padding-bottom: 36px;
   }
 
   .topbar {
     position: static;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    padding: 16px 24px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    padding: 14px 20px;
     border: 1px solid var(--line);
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45);
   }
@@ -463,25 +522,26 @@ a {
 
   .projectChip {
     max-width: 40%;
-    min-height: 40px;
-    padding: 8px 18px;
-    font-size: 14px;
+    min-height: 38px;
+    padding: 6px 16px;
+    font-size: 13.5px;
   }
 
   /* ในคอมพิวเตอร์แถบนำทางจะอยู่ถัดจากแถบด้านบนเพื่อไม่ให้บังฟอร์มยาว */
   .bottomNav {
     position: static;
     width: 100%;
-    margin-bottom: 24px;
-    border-radius: 16px;
+    max-width: 100%;
+    margin-bottom: 20px;
+    border-radius: 14px;
     border: 1px solid var(--line);
     padding: 6px 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
   .bottomNav button {
-    min-height: 42px;
-    font-size: 14px;
+    min-height: 40px;
+    font-size: 13.5px;
     border-radius: 10px;
     flex-direction: row;
     gap: 8px;
@@ -502,8 +562,8 @@ a {
   }
 
   .button {
-    min-height: 42px;
-    padding: 8px 20px;
+    min-height: 38px;
+    padding: 7px 18px;
     font-size: 14px;
   }
 
@@ -511,68 +571,34 @@ a {
   .field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
   .field textarea,
   .field select {
-    min-height: 42px;
-    border-radius: 12px;
-    padding: 10px 14px;
+    min-height: 40px;
+    border-radius: 10px;
+    padding: 9px 13px;
     font-size: 14px;
   }
 
   .field label {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 
   .pill {
-    padding: 4px 12px;
-    font-size: 13px;
+    padding: 4px 11px;
+    font-size: 12.5px;
   }
 
   .loginCard {
-    padding: 40px 36px;
-    border-radius: 24px;
+    padding: 36px 32px;
+    border-radius: 20px;
     gap: 20px;
   }
 
   .loginCard h1 {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .loginCard input {
-    min-height: 46px;
-    border-radius: 12px;
+    min-height: 44px;
+    border-radius: 10px;
     padding: 10px 14px;
   }
-}
-
-/* สไตล์แผงพับเปิด/ปิด (Accordion) */
-details.foldable {
-  border: 1px solid var(--line);
-  border-radius: 3.5vw;
-  background: var(--panel-strong);
-  overflow: hidden;
-}
-
-details.foldable > summary {
-  padding: 3vw 4vw;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  user-select: none;
-  color: var(--muted);
-}
-
-details.foldable > summary:hover {
-  color: var(--text);
-}
-
-details.foldable[open] > summary {
-  color: var(--accent);
-  border-bottom: 1px solid var(--line);
-}
-
-details.foldable > .foldContent {
-  padding: 4vw;
-  display: grid;
-  gap: 3vw;
 }
